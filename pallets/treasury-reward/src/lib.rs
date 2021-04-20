@@ -46,67 +46,30 @@ pub mod pallet {
 		/* module-specific types */
 
 		/// Minimum fraction of a treasury reward that goes to the Treasury account itself
+		#[pallet::constant]
 		type MinimumTreasuryPct: Get<Percent>;
+
 		/// Maximum fraction of a treasury reward that goes to an individual non-Treasury recipient itself
+		#[pallet::constant]
 		type MaximumRecipientPct: Get<Percent>;
 	}
 
-	// How often the reward should occur
-	#[pallet::storage]
-	#[pallet::getter(fn minting_interval)]
-	pub(super) type MintingInterval<T: Config> = StorageValue<
-		_,
-		T::BlockNumber,
-	>;
-
-	// The total amount that is paid out
-	#[pallet::storage]
-	#[pallet::getter(fn current_payout)]
-	pub(super) type CurrentPayout<T: Config> = StorageValue<
-		_,
-		BalanceOf<T>,
-	>;
-
-	// Treasury reward recipients
-	#[pallet::storage]
-	#[pallet::getter(fn recipients)]
-	pub(super) type Recipients<T: Config> = StorageValue<
-		_,
-		Vec<T::AccountId>,
-	>;
-
-	/// Treasury reward percentages mapping
-	#[pallet::storage]
-	#[pallet::getter(fn recipient_percentages)]
-	pub(super) type RecipientPercentages<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::AccountId,
-		RecipientAllocation,
-		OptionQuery,
-	>;
-
-	/*
-
-		pub enum Event<T> where <T as frame_system::Config>::BlockNumber,
-							<T as frame_system::Config>::AccountId,
-							Balance = <T as pallet_balances::Config>::Balance,
-							Payout = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance 
-	*/
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	#[pallet::metadata(T::BlockNumber = "BlockNumber")]
+	#[pallet::metadata(T::BlockNumber = "BlockNumber", T::AccountId = "AccountId", BalanceOf<T> = "Balance")]
 	pub enum Event<T: Config> {
-		TreasuryMinting(Balance, BlockNumber, AccountId),
-		RecipientAdded(AccountId, Percent),
-		RecipientRemoved(AccountId),
-		MintingIntervalUpdate(BlockNumber),
-		RewardPayoutUpdate(Payout),
+		TreasuryMinting(BalanceOf<T>, T::BlockNumber, T::AccountId),
+		RecipientAdded(T::AccountId, Percent),
+		RecipientRemoved(T::AccountId),
+		MintingIntervalUpdate(T::BlockNumber),
+		RewardPayoutUpdate(BalanceOf<T>),
 	}
 
 	#[pallet::error]
-	pub enum Error<T> {}
+	pub enum Error<T> {
+		FailedToAdd,
+		FailedToRemove,
+	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -169,22 +132,10 @@ pub mod pallet {
 		}
 
 		*/
-
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
-		/// Updates the minting interval of the treasury reward process
-		#[pallet::weight(5_000_000)]
-		fn set_minting_interval(origin: OriginFor<T>, interval: T::BlockNumber) -> DispatchResult {
-			ensure_root(origin)?;
-			<MintingInterval<T>>::put(interval);
-			Self::deposit_event(Event::MintingIntervalUpdate(interval));
-			Ok(())
-		}
-
-		/*
 
 		/// Adds a new recipient to the recipients list and assigns them
 		/// the submitted percentage of the leftover treasury reward.
@@ -262,14 +213,110 @@ pub mod pallet {
 			Self::deposit_event(Event::RewardPayoutUpdate(amount));
 			Ok(())
 		}
+	}
 
-		*/
+	// How often the reward should occur
+	#[pallet::storage]
+	#[pallet::getter(fn minting_interval)]
+	pub(super) type MintingInterval<T: Config> = StorageValue<
+		_,
+		T::BlockNumber,
+	>;
 
-		
+	// The total amount that is paid out
+	#[pallet::storage]
+	#[pallet::getter(fn current_payout)]
+	pub(super) type CurrentPayout<T: Config> = StorageValue<
+		_,
+		BalanceOf<T>,
+	>;
+
+	// Treasury reward recipients
+	#[pallet::storage]
+	#[pallet::getter(fn recipients)]
+	pub(super) type Recipients<T: Config> = StorageValue<
+		_,
+		Vec<T::AccountId>,
+		ValueQuery,
+	>;
+
+	/// Treasury reward percentages mapping
+	#[pallet::storage]
+	#[pallet::getter(fn recipient_percentages)]
+	pub(super) type RecipientPercentages<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		RecipientAllocation,
+	>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub recipients: Vec<T::AccountId>,
+		pub recipient_percentages: Vec<Percent>,
+	}
+
+	impl<T: Config> Default for GenesisConfig<T> {
+		// type default or default provided for fields
+		fn default() -> Self {
+			Self {
+				recipients: Default::default(),
+				recipient_percentages: Default::default(),
+			}
+		}
+	}
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			// The add_extra_genesis build logic
+			initialize_recipients(&self.recipients.clone(), &self.recipient_percentages.clone());
+		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
+
+	pub fn initialize_recipients(recipients: Vec<T::AccountId>, pcts: Vec<Percent>) {
+		assert!(recipients.len() == pcts.len(), "There must be a one-to-one mapping between recipients and percentages");
+		<Recipients<T>>::put(recipients.clone());
+		// Sum all percentages to ensure they're bounded by 100
+		let sum = Self::sum_percentages(pcts.clone());
+		assert!(sum <= 100, "Percentages must sum to at most 100");
+		for i in 0..recipients.clone().len() {
+			<RecipientPercentages<T>>::insert(recipients[i].clone(), RecipientAllocation {
+				current: pcts[i],
+				proposed: pcts[i],
+			});
+		}	
+	}
+
+	fn dilute_percentages(new_pct: Percent) {
+		let recipients = Self::recipients();
+		let dilution_frac = Self::get_leftover(new_pct);
+		// multiply all percentages by dilution fraction
+		for i in 0..recipients.len() {
+			if let Some(mut alloc) = Self::recipient_percentages(recipients[i].clone()) {
+				alloc.current = alloc.current.saturating_mul(dilution_frac);
+				<RecipientPercentages<T>>::insert(recipients[i].clone(), alloc);
+			}
+		}
+	}
+
+	fn augment_percentages(old_pct: Percent) {
+		let recipients = Self::recipients();
+		let augment_frac = Self::get_leftover(old_pct);
+		// divide all percetages by augment fraction
+		for i in 0..recipients.len() {
+			if let Some(mut alloc) = Self::recipient_percentages(recipients[i].clone()) {
+				alloc.current = alloc.current / augment_frac;
+				// Ensure augmenting never leads to higher than proposed allocation 
+				if alloc.current.deconstruct() > alloc.proposed.deconstruct() {
+					alloc.current = alloc.proposed;
+				}
+				<RecipientPercentages<T>>::insert(recipients[i].clone(), alloc);
+			}
+		}
+	}
 
 	fn get_recipient_pcts() -> Vec<Percent> {
 		let recipients = Self::recipients();
@@ -283,11 +330,70 @@ impl<T: Config> Pallet<T> {
 		return pcts;
 	}
 
+	/// Sums a vector of percentages
+	fn sum_percentages(pcts: Vec<Percent>) -> u8 {
+		let mut pct = 0;
+		for i in 0..pcts.len() {
+			pct += pcts[i].deconstruct();
+		}
+
+		return pct;
+	}
+
 	/// Calculates the difference between 100 percent and a provided percentage 
 	fn get_leftover(pct: Percent) -> Percent {
 		Percent::from_percent(100).saturating_sub(pct)
 	}
 
+	/// Calculates the remaining, leftover percentage that can be allocated
+	/// to any set of recipients without diluting all the other recipients
+	/// allocation
+	fn get_available_recipient_alloc() -> Percent {
+		let recipients = Self::recipients();
+		let mut pct_sum = Percent::from_percent(0);
+		for i in 0..recipients.len() {
+			if let Some(alloc) = Self::recipient_percentages(recipients[i].clone()) {
+				pct_sum = pct_sum.saturating_add(alloc.current);
+			}
+		}
+
+		return Self::get_leftover(pct_sum);
+	}
+
+	/// Helper function to add a recipient into the module's storage
+	fn add_recipient(recipient: T::AccountId, proposed_pct: Percent, current_pct: Percent) {
+		let mut recipients = Self::recipients();
+		// Add the new recipient to the pool
+		recipients.push(recipient.clone());
+		<Recipients<T>>::put(recipients);
+		// Add the recipients percentage
+		<RecipientPercentages<T>>::insert(recipient.clone(), RecipientAllocation {
+			current: current_pct,
+			proposed: proposed_pct,
+		});
+		Self::deposit_event(Event::RecipientAdded(recipient, proposed_pct));
+	}
+
+	/// Helper function to remove a recipient from the module's storage
+	fn remove_recipient(recipient: T::AccountId) {
+		let mut recipients = Self::recipients();
+		// Find recipient index and remove them
+		let index = recipients.iter().position(|x| *x == recipient).unwrap();
+		recipients.remove(index);
+		// Put recipients back
+		<Recipients<T>>::put(recipients.clone());
+		// Remove the removed recipient's percentage from the map
+		<RecipientPercentages<T>>::remove(recipient.clone());
+		Self::deposit_event(Event::RecipientRemoved(recipient));
+	}
+
+	/// Adds a percentage increase to a recipients allocation
+	fn add_to_allocation(recipient: T::AccountId, pct: Percent) {
+		if let Some(mut alloc) = Self::recipient_percentages(recipient.clone()) {
+			alloc.current = alloc.current.saturating_add(pct);
+			<RecipientPercentages<T>>::insert(recipient, alloc);
+		}
+	}
 }
 
 
