@@ -41,8 +41,16 @@ fn load_spec(
 	para_id: ParaId,
 ) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	match id {
-		"hedgeware-rococo" => Ok(Box::new(chain_spec::hedgeware_rococo_testnet())),
-		"hedgeware-config" => Ok(Box::new(chain_spec::hedgeware(para_id))),
+		"staging" => Ok(Box::new(chain_spec::staging_test_net(para_id))),
+		"tick" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
+			&include_bytes!("../res/tick.json")[..],
+		)?)),
+		"trick" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
+			&include_bytes!("../res/trick.json")[..],
+		)?)),
+		"track" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
+			&include_bytes!("../res/track.json")[..],
+		)?)),
 		"" => Ok(Box::new(chain_spec::get_chain_spec(para_id))),
 		path => Ok(Box::new(chain_spec::ChainSpec::from_json_file(
 			path.into(),
@@ -52,7 +60,7 @@ fn load_spec(
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Hedgeware Parachain Collator".into()
+		"Cumulus Test Parachain Collator".into()
 	}
 
 	fn impl_version() -> String {
@@ -61,7 +69,7 @@ impl SubstrateCli for Cli {
 
 	fn description() -> String {
 		format!(
-			"Hedgeware parachain collator\n\nThe command-line arguments provided first will be \
+			"Cumulus test parachain collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relaychain node.\n\n\
 		{} [parachain-args] -- [relaychain-args]",
@@ -92,7 +100,7 @@ impl SubstrateCli for Cli {
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Hedgeware Parachain Collator".into()
+		"Cumulus Test Parachain Collator".into()
 	}
 
 	fn impl_version() -> String {
@@ -100,7 +108,7 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn description() -> String {
-		"Hedgeware parachain collator\n\nThe command-line arguments provided first will be \
+		"Cumulus test parachain collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relaychain node.\n\n\
 		rococo-collator [parachain-args] -- [relaychain-args]"
@@ -233,7 +241,7 @@ pub fn run() -> Result<()> {
 
 			let block: Block = generate_genesis_block(&load_spec(
 				&params.chain.clone().unwrap_or_default(),
-				params.parachain_id.into(),
+				params.parachain_id.unwrap_or(100).into(),
 			)?)?;
 			let raw_header = block.header().encode();
 			let output_buf = if params.raw {

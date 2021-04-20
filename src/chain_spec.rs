@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Cumulus.  If not, see <http://www.gnu.org/licenses/>.
 
-use parachain_runtime::DOLLARS;
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use rococo_parachain_primitives::{AccountId, Signature};
@@ -23,8 +22,6 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use lockdrop::*;
-use rococo_parachain_primitives::*;
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<parachain_runtime::GenesisConfig, Extensions>;
@@ -53,14 +50,6 @@ impl Extensions {
 	}
 }
 
-/// Mainnet configuration
-pub fn hedgeware_rococo_testnet() -> ChainSpec {
-	match ChainSpec::from_json_bytes(&include_bytes!("../res/hedgeware.chainspec.json")[..]) {
-		Ok(spec) => spec,
-		Err(e) => panic!("{}", e),
-	}
-}
-
 type AccountPublic = <Signature as Verify>::Signer;
 
 /// Helper function to generate an account ID from seed
@@ -72,14 +61,6 @@ where
 }
 
 pub fn get_chain_spec(id: ParaId) -> ChainSpec {
-	let data = r#"
-		{
-			"ss58Format": 42,
-			"tokenDecimals": 18,
-			"tokenSymbol": "tHEDG"
-		}"#;
-	let properties = serde_json::from_str(data).unwrap();
-
 	ChainSpec::from_genesis(
 		"Local Testnet",
 		"local_testnet",
@@ -107,39 +88,34 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 		vec![],
 		None,
 		None,
-		properties,
+		None,
 		Extensions {
-			relay_chain: "rococo_local_testnet".into(),
+			relay_chain: "westend-dev".into(),
 			para_id: id.into(),
 		},
 	)
 }
 
-pub fn hedgeware(id: ParaId) -> ChainSpec {
-	let data = r#"
-		{
-			"ss58Format": 77,
-			"tokenDecimals": 18,
-			"tokenSymbol": "tHEDG"
-		}"#;
-	let properties = serde_json::from_str(data).unwrap();
+pub fn staging_test_net(id: ParaId) -> ChainSpec {
 	ChainSpec::from_genesis(
-		"Hedgeware",
-		"hedgeware",
+		"Staging Testnet",
+		"staging_testnet",
 		ChainType::Live,
 		move || {
 			testnet_genesis(
-				hex!["0000000000000000000000000000000000000000000000000000000000000000"].into(),
-				vec![],
+				hex!["9ed7705e3c7da027ba0583a22a3212042f7e715d3c168ba14f1424e2bc111d00"].into(),
+				vec![
+					hex!["9ed7705e3c7da027ba0583a22a3212042f7e715d3c168ba14f1424e2bc111d00"].into(),
+				],
 				id,
 			)
 		},
 		Vec::new(),
 		None,
 		None,
-		properties,
+		None,
 		Extensions {
-			relay_chain: "rococo".into(),
+			relay_chain: "westend-dev".into(),
 			para_id: id.into(),
 		},
 	)
@@ -150,13 +126,6 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
 ) -> parachain_runtime::GenesisConfig {
-	let allocation: Allocation = parse_allocation().unwrap();
-	let balances: Vec<(AccountId, Balance)> = allocation.balances;
-
-	let vesting: Vec<(AccountId, BlockNumber, BlockNumber, Balance)> = allocation.vesting;
-
-	const INITIAL_BALANCE: u128 = 1_000_000 * DOLLARS;
-
 	parachain_runtime::GenesisConfig {
 		frame_system: parachain_runtime::SystemConfig {
 			code: parachain_runtime::WASM_BINARY
@@ -165,27 +134,13 @@ fn testnet_genesis(
 			changes_trie_config: Default::default(),
 		},
 		pallet_balances: parachain_runtime::BalancesConfig {
-			balances: balances.into_iter()
-				.chain::<Vec<(AccountId, Balance)>>(
-					endowed_accounts
-						.iter()
-						.map(|a| (a.clone(), INITIAL_BALANCE))
-						.collect()
-					)
-				.map(|a| a)
-				.collect::<Vec<(AccountId, Balance)>>(),
+			balances: endowed_accounts
+				.iter()
+				.cloned()
+				.map(|k| (k, 1 << 60))
+				.collect(),
 		},
-		pallet_vesting: parachain_runtime::VestingConfig { vesting: vesting },
 		pallet_sudo: parachain_runtime::SudoConfig { key: root_key },
 		parachain_info: parachain_runtime::ParachainInfoConfig { parachain_id: id },
-		pallet_contracts: Default::default(),
-		pallet_democracy: Default::default(),
-		pallet_collective_Instance1: parachain_runtime::CouncilConfig {
-			members: vec![],
-			phantom: Default::default(),
-		},
-		pallet_treasury: Default::default(),
-		edge_treasury_reward: Default::default(),
-		pallet_elections_phragmen: Default::default(),
 	}
 }
