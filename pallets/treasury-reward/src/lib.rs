@@ -269,7 +269,7 @@ pub mod pallet {
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
 			// The add_extra_genesis build logic
-			initialize_recipients(&self.recipients.clone(), &self.recipient_percentages.clone());
+			<Pallet<T>>::initialize_recipients(self.recipients.clone(), self.recipient_percentages.clone());
 		}
 	}
 }
