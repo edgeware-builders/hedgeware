@@ -5,7 +5,7 @@ use sp_std::prelude::*;
 use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{Percent, RuntimeDebug};
 use frame_system::{Config as SystemConfig};
-use frame_support::traits::Currency;
+use frame_support::traits::{Get, Currency};
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, Ord, PartialOrd, RuntimeDebug)]
 pub struct RecipientAllocation {
@@ -58,7 +58,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	#[pallet::metadata(T::BlockNumber = "BlockNumber", T::AccountId = "AccountId", BalanceOf<T> = "Balance")]
 	pub enum Event<T: Config> {
-		TreasuryMinting(BalanceOf<T>, T::BlockNumber, T::AccountId),
+		TreasuryMinting(T::Balance, T::BlockNumber, T::AccountId),
 		RecipientAdded(T::AccountId, Percent),
 		RecipientRemoved(T::AccountId),
 		MintingIntervalUpdate(T::BlockNumber),
@@ -73,9 +73,7 @@ pub mod pallet {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-
-		/*
-
+		
 		/// Mint money for the treasury and recipient pool!
 		fn on_finalize(_n: T::BlockNumber) {
 			if <frame_system::Pallet<T>>::block_number() % Self::minting_interval() == Zero::zero() {
@@ -122,16 +120,18 @@ pub mod pallet {
 					&<pallet_treasury::Pallet<T>>::account_id(),
 					treasury_reward,
 				);
+
+				let treasury_balance = <pallet_balances::Pallet<T>>::free_balance(<pallet_treasury::Pallet<T>>::account_id());
+
 				// emit event of payout
 				Self::deposit_event(Event::TreasuryMinting(
-					<pallet_balances::Pallet<T>>::free_balance(<pallet_treasury::Pallet<T>>::account_id()),
+					treasury_balance,
 					<frame_system::Pallet<T>>::block_number(),
 					<pallet_treasury::Pallet<T>>::account_id())
 				);
 			}
 		}
-
-		*/
+		
 	}
 
 	#[pallet::call]
