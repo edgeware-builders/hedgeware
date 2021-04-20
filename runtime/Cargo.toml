@@ -28,10 +28,27 @@ frame-support = { git = "https://github.com/paritytech/substrate", default-featu
 frame-executive = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-bounties = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-collective = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-democracy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-elections-phragmen = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-identity = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-recovery = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-scheduler = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 pallet-sudo = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-tips = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-treasury = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
 pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-utility = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+pallet-vesting = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "rococo-v1" }
+
 
 # Cumulus dependencies
 cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/cumulus", branch = "rococo-v1", default-features = false }
@@ -50,6 +67,8 @@ pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features 
 
 # Hedgeware modules
 # treasury-reward = { path = "../pallets/treasury-reward", default-features = false }
+
+static_assertions = "1.1.0"
 
 [build-dependencies]
 substrate-wasm-builder = "3.0.0"
@@ -75,10 +94,25 @@ std = [
 	"frame-executive/std",
 	"frame-system/std",
 	"pallet-balances/std",
+	"pallet-bounties/std",
+	"pallet-collective/std",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts-rpc-runtime-api/std",
+	"pallet-democracy/std",
+	"pallet-elections-phragmen/std",
+	"pallet-identity/std",
+	"pallet-multisig/std",
+	"pallet-proxy/std",
 	"pallet-randomness-collective-flip/std",
-	"pallet-timestamp/std",
+	"pallet-recovery/std",
+	"pallet-scheduler/std",
 	"pallet-sudo/std",
+	"pallet-timestamp/std",
+	"pallet-tips/std",
 	"pallet-transaction-payment/std",
+	"pallet-treasury/std",
+	"pallet-utility/std",
 	"parachain-info/std",
 	"rococo-parachain-primitives/std",
 	"cumulus-pallet-parachain-system/std",
