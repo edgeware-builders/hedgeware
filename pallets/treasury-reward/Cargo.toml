@@ -15,7 +15,6 @@ sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "ro
 frame-support = { git = "https://github.com/paritytech/substrate.git", branch = "rococo-v1", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate.git", branch = "rococo-v1", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate.git", branch = "rococo-v1", default-features = false }
-pallet-treasury = { git = "https://github.com/paritytech/substrate.git", branch = "rococo-v1", default-features = false }
 
 [dev-dependencies]
 sp-io = { git = "https://github.com/paritytech/substrate.git", branch = "rococo-v1", default-features = false }
@@ -33,5 +32,4 @@ std = [
 	"pallet-balances/std",
 	"frame-support/std",
 	"frame-system/std",
-	"pallet-treasury/std",
 ]
