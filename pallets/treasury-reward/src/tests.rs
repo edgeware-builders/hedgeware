@@ -39,48 +39,48 @@ fn setting_treasury_block_reward () {
 		let treasury_address: AccountId = TreasuryPalletId::get().into_account();
 		System::set_block_number(1);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(1);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 9500000);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 95 * DOLLARS);
 		System::set_block_number(2);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(2);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000000);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS);
 
 		<TreasuryReward>::set_current_payout(Origin::root(), 95).unwrap();
 		<TreasuryReward>::set_minting_interval(Origin::root(), 2).unwrap();
 		
 		System::set_block_number(3);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(3);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000000);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS);
 		System::set_block_number(4);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(4);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000095);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 95);
 
 		<TreasuryReward>::set_current_payout(Origin::root(), 0).unwrap();
 
 		System::set_block_number(5);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(5);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000095);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 95);
 		System::set_block_number(6);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(6);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000095);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 95);
 
 		<TreasuryReward>::set_current_payout(Origin::root(), 105).unwrap();
 
 		System::set_block_number(7);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(7);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000095);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 95);
 		System::set_block_number(8);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(8);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000200);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 200);
 
 		<TreasuryReward>::set_minting_interval(Origin::root(), 1).unwrap();
 		<TreasuryReward>::set_current_payout(Origin::root(), 10).unwrap();
 
 		System::set_block_number(9);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(9);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000210);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 210);
 		System::set_block_number(10);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(10);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 19000220);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 190 * DOLLARS + 220);
 	});
 }
 
@@ -294,9 +294,9 @@ fn payout_participants_and_treasury_successfully() {
 		assert_eq!(Balances::free_balance(AccountId::new([203; 32])), 0);
 		System::set_block_number(1);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(1);
-		assert_eq!(Balances::free_balance(treasury_address.clone()), 8075000);
-		assert_eq!(Balances::free_balance(AccountId::new([201; 32])), 475000);
-		assert_eq!(Balances::free_balance(AccountId::new([202; 32])), 475000);
-		assert_eq!(Balances::free_balance(AccountId::new([203; 32])), 475000);
+		assert_eq!(Balances::free_balance(treasury_address.clone()), 8075 * DOLLARS / 100);
+		assert_eq!(Balances::free_balance(AccountId::new([201; 32])), 475 * DOLLARS / 100);
+		assert_eq!(Balances::free_balance(AccountId::new([202; 32])), 475 * DOLLARS / 100);
+		assert_eq!(Balances::free_balance(AccountId::new([203; 32])), 475 * DOLLARS / 100);
 	});
 }

@@ -1,13 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+use crate as treasury_reward;
 
 use sp_std::vec; //build complained about vec! macro
 use codec::*;
 use sp_runtime::traits::AccountIdConversion;
-use sp_std::prelude::*;
+pub use sp_std::prelude::*;
 use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{Percent, RuntimeDebug};
 
-use frame_support::{traits::{Currency, Get}, PalletId};
+use frame_support::{traits::{Currency, Get, GenesisBuild}, PalletId};
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, Ord, PartialOrd, RuntimeDebug)]
 pub struct RecipientAllocation {
@@ -199,7 +200,21 @@ pub mod pallet {
 			MintingInterval::<T>::put(self.minting_interval);
 			CurrentPayout::<T>::put(self.current_payout);
 			// The add_extra_genesis build logic
-			<Pallet<T>>::initialize_recipients(self.recipients.clone(), self.recipient_percentages.clone());
+			assert!(self.recipients.len() == self.recipient_percentages.len(), "There must be a one-to-one mapping between recipients and percentages");
+			<Recipients<T>>::put(self.recipients.clone());
+
+			let mut sum = 0;
+			for i in 0..self.recipient_percentages.len() {
+				sum += self.recipient_percentages[i].deconstruct();
+			}
+
+			assert!(sum <= 100, "Percentages must sum to at most 100");
+			for i in 0..self.recipients.clone().len() {
+				<RecipientPercentages<T>>::insert(self.recipients[i].clone(), RecipientAllocation {
+					current: self.recipient_percentages[i],
+					proposed: self.recipient_percentages[i],
+				});
+			}
 		}
 	}
 
@@ -289,20 +304,6 @@ impl<T: Config> Pallet<T> {
 	/// Check whether account_id is a module account
 	pub(crate) fn get_treasury_account() -> T::AccountId {
 		T::DefaultRewardAddress::get().into_account()
-	}
-
-	pub fn initialize_recipients(recipients: Vec<T::AccountId>, pcts: Vec<Percent>) {
-		assert!(recipients.len() == pcts.len(), "There must be a one-to-one mapping between recipients and percentages");
-		<Recipients<T>>::put(recipients.clone());
-		// Sum all percentages to ensure they're bounded by 100
-		let sum = Self::sum_percentages(pcts.clone());
-		assert!(sum <= 100, "Percentages must sum to at most 100");
-		for i in 0..recipients.clone().len() {
-			<RecipientPercentages<T>>::insert(recipients[i].clone(), RecipientAllocation {
-				current: pcts[i],
-				proposed: pcts[i],
-			});
-		}	
 	}
 
 	pub fn dilute_percentages(new_pct: Percent) {

@@ -1,6 +1,5 @@
 use super::*;
-use crate as treasury_reward;
-use sp_runtime::Permill;
+use sp_runtime::traits::One;
 use frame_support::pallet_prelude::DispatchResult;
 use frame_support::{construct_runtime, parameter_types, weights::Weight, PalletId};
 use frame_system as system;
@@ -16,7 +15,7 @@ pub(crate) type Balance = u64;
 // Configure a mock runtime to test the pallet.
 type UncheckedExtrinsic = MockUncheckedExtrinsic<Test>;
 type Block = MockBlock<Test>;
-
+pub const DOLLARS: Balance = 1_000_000_000;
 pub type AccountId = AccountId32;
 
 construct_runtime!(
@@ -27,7 +26,7 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Event<T>},
+		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
@@ -131,15 +130,15 @@ pub(crate) fn new_test_ext(recipients: Option<Vec<AccountId>>, pcts: Option<Vec<
 		],
 	}.assimilate_storage(&mut t).unwrap();
 
-	let DOLLARS = 1_000_000_000;
-	// treasury_reward::GenesisConfig::<Test> {
-	// 	current_payout: 95 * DOLLARS,
-	// 	minting_interval: One::one(),
-	// 	recipients: recipients,
-	// 	recipient_percentages: pcts,
-	// }
-	// .assimilate_storage(&mut t)
-	// .unwrap();
+	
+	treasury_reward::GenesisConfig::<Test> {
+		current_payout: 95 * DOLLARS,
+		minting_interval: One::one(),
+		recipients: recipients,
+		recipient_percentages: pcts,
+	}
+	.assimilate_storage(&mut t)
+	.unwrap();
 
 	t.into()
 }
