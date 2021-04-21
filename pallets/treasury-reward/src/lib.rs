@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use sp_std::vec; //build complained about vec! macro
 use codec::*;
 use sp_runtime::traits::AccountIdConversion;
 use sp_std::prelude::*;

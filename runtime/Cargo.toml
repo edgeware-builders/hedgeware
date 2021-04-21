@@ -66,7 +66,7 @@ xcm-executor = { git = "https://github.com/paritytech/polkadot", default-feature
 pallet-xcm = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "rococo-v1" }
 
 # Hedgeware modules
-# treasury-reward = { path = "../pallets/treasury-reward", default-features = false }
+treasury-reward = { path = "../pallets/treasury-reward", default-features = false }
 
 static_assertions = "1.1.0"
 
@@ -124,5 +124,5 @@ std = [
 	"xcm/std",
 	"xcm-builder/std",
 	"xcm-executor/std",
-#	"treasury-reward/std",
+	"treasury-reward/std",
 ]

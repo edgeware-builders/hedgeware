@@ -755,6 +755,7 @@ dependencies = [
  "sp-version",
  "static_assertions",
  "substrate-wasm-builder",
+ "treasury-reward",
  "xcm",
  "xcm-builder",
  "xcm-executor",
@@ -4304,6 +4305,20 @@ dependencies = [
  "tracing-core",
  "tracing-log",
  "tracing-serde",
+]
+
+[[package]]
+name = "treasury-reward"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "safe-mix",
+ "serde",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
