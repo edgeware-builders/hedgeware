@@ -8,7 +8,7 @@ pub use sp_std::prelude::*;
 use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{Percent, RuntimeDebug};
 
-use frame_support::{traits::{Currency, Get, GenesisBuild}, PalletId};
+use frame_support::{traits::{Currency, Get}, PalletId};
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, Ord, PartialOrd, RuntimeDebug)]
 pub struct RecipientAllocation {

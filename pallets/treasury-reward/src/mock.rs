@@ -9,6 +9,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	Perbill, AccountId32,
 };
+use frame_support::traits::GenesisBuild;
 use system::mocking::{MockBlock, MockUncheckedExtrinsic};
 pub(crate) type Balance = u64;
 
