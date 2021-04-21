@@ -3,7 +3,7 @@
 use codec::*;
 use sp_runtime::traits::AccountIdConversion;
 use sp_std::prelude::*;
-use sp_runtime::traits::{Saturating};
+use sp_runtime::traits::{Saturating, Zero};
 use sp_runtime::{Percent, RuntimeDebug};
 
 use frame_support::{traits::{Currency, Get}, PalletId};
@@ -56,13 +56,13 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	#[pallet::metadata(T::BlockNumber = "BlockNumber", T::AccountId = "AccountId", T::Balance = "Balance")]
+	#[pallet::metadata(T::BlockNumber = "BlockNumber", T::AccountId = "AccountId", T::Balance = "Balance", BalanceOf<T> = "Balance")]
 	pub enum Event<T: Config> {
 		TreasuryMinting(T::Balance, T::BlockNumber, T::AccountId),
 		RecipientAdded(T::AccountId, Percent),
 		RecipientRemoved(T::AccountId),
 		MintingIntervalUpdate(T::BlockNumber),
-		RewardPayoutUpdate(T::Balance),
+		RewardPayoutUpdate(BalanceOf<T>),
 	}
 
 	#[pallet::error]
@@ -74,63 +74,63 @@ pub mod pallet {
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		
-		// /// Mint money for the treasury and recipient pool!
-		// fn on_finalize(_n: T::BlockNumber) {
-		// 	if <frame_system::Pallet<T>>::block_number() % Self::minting_interval().unwrap() == Zero::zero() {
-		// 		let reward = Self::current_payout().unwrap();
-		// 		// get up front treasury reward from minimum amount that is always allocated
-		// 		let mut treasury_reward = T::MinimumTreasuryPct::get() * reward;
-		// 		// up front allocation being split between recipients, any leftover goes to Treasury
-		// 		let leftover_recipient_alloc = Self::get_leftover(T::MinimumTreasuryPct::get());
-		// 		// up front reward that gets divided between recipients; the recipients current
-		// 		// allocation percentage denotes their fraction of the leftover_recipient_allocation
-		// 		let leftover_recipients_reward = leftover_recipient_alloc * reward;
-		// 		let recipients = Self::recipients();
-		// 		let mut allocated_to_recipients: BalanceOf<T> = 0u32.into();
-		// 		for i in 0..recipients.len() {
-		// 			if let Some(alloc) = Self::recipient_percentages(recipients[i].clone()) {
-		// 				// calculate fraction for recipient i
-		// 				let reward_i = alloc.current * leftover_recipients_reward;
-		// 				// reward the recipient
-		// 				T::Currency::deposit_creating(
-		// 					&recipients[i].clone(),
-		// 					reward_i.clone(),
-		// 				);
-		// 				// emit event of payout
-		// 				Self::deposit_event(Event::TreasuryMinting(
-		// 					<pallet_balances::Pallet<T>>::free_balance(recipients[i].clone()),
-		// 					<frame_system::Pallet<T>>::block_number(),
-		// 					recipients[i].clone())
-		// 				);
-		// 				// track currently allocated amount to recipients
-		// 				allocated_to_recipients = allocated_to_recipients + reward_i;
-		// 			}
-		// 		}
+		/// Mint money for the treasury and recipient pool!
+		fn on_finalize(_n: T::BlockNumber) {
+			if <frame_system::Pallet<T>>::block_number() % Self::minting_interval() == Zero::zero() {
+				let reward = Self::current_payout();
+				// get up front treasury reward from minimum amount that is always allocated
+				let mut treasury_reward = T::MinimumTreasuryPct::get() * reward;
+				// up front allocation being split between recipients, any leftover goes to Treasury
+				let leftover_recipient_alloc = Self::get_leftover(T::MinimumTreasuryPct::get());
+				// up front reward that gets divided between recipients; the recipients current
+				// allocation percentage denotes their fraction of the leftover_recipient_allocation
+				let leftover_recipients_reward = leftover_recipient_alloc * reward;
+				let recipients = Self::recipients();
+				let mut allocated_to_recipients: BalanceOf<T> = 0u32.into();
+				for i in 0..recipients.len() {
+					if let Some(alloc) = Self::recipient_percentages(recipients[i].clone()) {
+						// calculate fraction for recipient i
+						let reward_i = alloc.current * leftover_recipients_reward;
+						// reward the recipient
+						T::Currency::deposit_creating(
+							&recipients[i].clone(),
+							reward_i.clone(),
+						);
+						// emit event of payout
+						Self::deposit_event(Event::TreasuryMinting(
+							<pallet_balances::Pallet<T>>::free_balance(recipients[i].clone()),
+							<frame_system::Pallet<T>>::block_number(),
+							recipients[i].clone())
+						);
+						// track currently allocated amount to recipients
+						allocated_to_recipients = allocated_to_recipients + reward_i;
+					}
+				}
 
-		// 		// update treasury reward with any leftover reward deducted by what was allocated
-		// 		// or ensure that if no recipients exist, to provide entire reward to the treasury
-		// 		if recipients.len() == 0 {
-		// 			treasury_reward = reward;
-		// 		} else {
-		// 			treasury_reward = treasury_reward + leftover_recipients_reward - allocated_to_recipients;
-		// 		}
+				// update treasury reward with any leftover reward deducted by what was allocated
+				// or ensure that if no recipients exist, to provide entire reward to the treasury
+				if recipients.len() == 0 {
+					treasury_reward = reward;
+				} else {
+					treasury_reward = treasury_reward + leftover_recipients_reward - allocated_to_recipients;
+				}
 
-		// 		// allocate reward to the Treasury
-		// 		T::Currency::deposit_creating(
-		// 			&T::DefaultRewardAddress::get(),
-		// 			treasury_reward,
-		// 		);
+				// allocate reward to the Treasury
+				T::Currency::deposit_creating(
+					&Self::get_treasury_account(),
+					treasury_reward,
+				);
 
-		// 		let treasury_balance = <pallet_balances::Pallet<T>>::free_balance(T::DefaultRewardAddress::get());
+				let treasury_balance = <pallet_balances::Pallet<T>>::free_balance(Self::get_treasury_account());
 
-		// 		// emit event of payout
-		// 		Self::deposit_event(Event::TreasuryMinting(
-		// 			treasury_balance,
-		// 			<frame_system::Pallet<T>>::block_number(),
-		// 			T::DefaultRewardAddress::get())
-		// 		);
-		// 	}
-		// }
+				// emit event of payout
+				Self::deposit_event(Event::TreasuryMinting(
+					treasury_balance,
+					<frame_system::Pallet<T>>::block_number(),
+					Self::get_treasury_account())
+				);
+			}
+		}
 	}
 
 	// How often the reward should occur
@@ -139,14 +139,17 @@ pub mod pallet {
 	pub(super) type MintingInterval<T: Config> = StorageValue<
 		_,
 		T::BlockNumber,
+		ValueQuery,
 	>;
 
 	// The total amount that is paid out
+	// The balance used here should derive from Currency, because this field is used in minting new currency.
 	#[pallet::storage]
 	#[pallet::getter(fn current_payout)]
 	pub(super) type CurrentPayout<T: Config> = StorageValue<
 		_,
-		T::Balance,
+		BalanceOf<T>,
+		ValueQuery,
 	>;
 
 	// Treasury reward recipients
@@ -168,36 +171,36 @@ pub mod pallet {
 		RecipientAllocation,
 	>;
 
-	// #[pallet::genesis_config]
-	// pub struct GenesisConfig<T: Config> {
-	// 	pub minting_interval: T::BlockNumber,
-	// 	pub current_payout: T::Balance,
-	// 	pub recipients: Vec<T::AccountId>,
-	// 	pub recipient_percentages: Vec<Percent>,
-	// }
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub minting_interval: T::BlockNumber,
+		pub current_payout: BalanceOf<T>,
+		pub recipients: Vec<T::AccountId>,
+		pub recipient_percentages: Vec<Percent>,
+	}
 
-	// #[cfg(feature = "std")]
-	// impl<T: Config> Default for GenesisConfig<T> {
-	// 	// type default or default provided for fields
-	// 	fn default() -> Self {
-	// 		Self {
-	// 			minting_interval: Default::default(),
-	// 			current_payout: Default::default(),
-	// 			recipients: Default::default(),
-	// 			recipient_percentages: Default::default(),
-	// 		}
-	// 	}
-	// }
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		// type default or default provided for fields
+		fn default() -> Self {
+			Self {
+				minting_interval: Default::default(),
+				current_payout: Default::default(),
+				recipients: Default::default(),
+				recipient_percentages: Default::default(),
+			}
+		}
+	}
 
-	// #[pallet::genesis_build]
-	// impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-	// 	fn build(&self) {
-	// 		MintingInterval::<T>::put(self.minting_interval);
-	// 		CurrentPayout::<T>::put(self.current_payout);
-	// 		// The add_extra_genesis build logic
-	// 		<Pallet<T>>::initialize_recipients(self.recipients.clone(), self.recipient_percentages.clone());
-	// 	}
-	// }
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			MintingInterval::<T>::put(self.minting_interval);
+			CurrentPayout::<T>::put(self.current_payout);
+			// The add_extra_genesis build logic
+			<Pallet<T>>::initialize_recipients(self.recipients.clone(), self.recipient_percentages.clone());
+		}
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -272,7 +275,7 @@ pub mod pallet {
 
 		/// Updates the current payout of the treasury reward process
 		#[pallet::weight(5_000_000)]
-		pub(super) fn set_current_payout(origin: OriginFor<T>, amount: T::Balance) -> DispatchResult {
+		pub(super) fn set_current_payout(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			ensure_root(origin)?;
 			<CurrentPayout<T>>::put(amount);
 			Self::deposit_event(Event::RewardPayoutUpdate(amount));
@@ -283,7 +286,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	/// Check whether account_id is a module account
-	pub(crate) fn get_pallet_account() -> T::AccountId {
+	pub(crate) fn get_treasury_account() -> T::AccountId {
 		T::DefaultRewardAddress::get().into_account()
 	}
 
