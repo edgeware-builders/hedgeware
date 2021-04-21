@@ -11,7 +11,7 @@ fn basic_setup_works() {
 		Some(vec![Percent::from_percent(10), Percent::from_percent(10), Percent::from_percent(10)]),
 	).execute_with(|| {
 		// Initial Era and session
-		let treasury_address = Treasury::account_id().clone();
+		let treasury_address: AccountId = TreasuryPalletId::get().into_account();
 		System::set_block_number(1);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(1);
 		System::set_block_number(2);
@@ -36,7 +36,7 @@ fn setting_treasury_block_reward () {
 		Some(vec![]),
 	).execute_with(|| {
 		// Initial Era and session
-		let treasury_address = Treasury::account_id().clone();
+		let treasury_address: AccountId = TreasuryPalletId::get().into_account();
 		System::set_block_number(1);
 		<TreasuryReward as OnFinalize<u64>>::on_finalize(1);
 		assert_eq!(Balances::free_balance(treasury_address.clone()), 9500000);
@@ -288,7 +288,7 @@ fn payout_participants_and_treasury_successfully() {
 		Some(vec![Percent::from_percent(10), Percent::from_percent(10), Percent::from_percent(10)]),
 	).execute_with(|| {
 		// Initial Era and session
-		let treasury_address = Treasury::account_id().clone();
+		let treasury_address: AccountId = TreasuryPalletId::get().into_account();
 		assert_eq!(Balances::free_balance(AccountId::new([201; 32])), 0);
 		assert_eq!(Balances::free_balance(AccountId::new([202; 32])), 0);
 		assert_eq!(Balances::free_balance(AccountId::new([203; 32])), 0);

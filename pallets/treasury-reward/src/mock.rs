@@ -27,7 +27,6 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
 		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Event<T>},
 	}
 );
@@ -82,30 +81,7 @@ impl pallet_balances::Config for Test {
 }
 
 parameter_types! {
-	pub const ProposalBond: Permill = Permill::from_percent(5);
-	pub const ProposalBondMinimum: u64 = 1;
-	pub const SpendPeriod: u64 = 2;
-	pub const Burn: Permill = Permill::from_percent(50);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
-	pub const BountyUpdatePeriod: u32 = 20;
-	pub const BountyCuratorDeposit: Permill = Permill::from_percent(50);
-	pub const BountyValueMinimum: u64 = 1;
-}
-
-impl pallet_treasury::Config for Test {
-	type PalletId = TreasuryPalletId;
-	type Currency = pallet_balances::Pallet<Test>;
-	type ApproveOrigin = frame_system::EnsureRoot<AccountId>;
-	type RejectOrigin = frame_system::EnsureRoot<AccountId>;
-	type Event = Event;
-	type OnSlash = ();
-	type ProposalBond = ProposalBond;
-	type ProposalBondMinimum = ProposalBondMinimum;
-	type SpendPeriod = SpendPeriod;
-	type Burn = Burn;
-	type BurnDestination = ();  // Just gets burned.
-	type WeightInfo = ();
-	type SpendFunds = ();
 }
 
 parameter_types! {
