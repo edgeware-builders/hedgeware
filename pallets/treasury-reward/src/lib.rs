@@ -1,5 +1,4 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-use crate as treasury_reward;
 
 use sp_std::vec; //build complained about vec! macro
 use codec::*;
