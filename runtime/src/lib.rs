@@ -799,18 +799,18 @@ impl pallet_vesting::Config for Runtime {
 	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
 }
 
-// parameter_types! {
-// 	pub const MinimumTreasuryPct: Percent = Percent::from_percent(50);
-// 	pub const MaximumRecipientPct: Percent = Percent::from_percent(50);
-// }
+parameter_types! {
+	pub const MinimumTreasuryPct: Percent = Percent::from_percent(50);
+	pub const MaximumRecipientPct: Percent = Percent::from_percent(50);
+}
 
-// impl treasury_reward::Config for Runtime {
-// 	type Event = Event;
-// 	type Currency = Balances;
-// 	type MinimumTreasuryPct = MinimumTreasuryPct;
-// 	type MaximumRecipientPct = MaximumRecipientPct;
-// 	type DefaultRewardAddress = TreasuryPalletId;
-// }
+impl treasury_reward::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type MinimumTreasuryPct = MinimumTreasuryPct;
+	type MaximumRecipientPct = MaximumRecipientPct;
+	type DefaultRewardAddress = TreasuryPalletId;
+}
 
 // impl<F: FindAuthor<u32>> FindAuthor<H160> for EthereumFindAuthor<F> {
 // 	fn find_author<'a, I>(_digests: I) -> Option<H160>
@@ -861,6 +861,7 @@ construct_runtime! {
 		Tips: pallet_tips::{Pallet, Call, Storage, Event<T>},
 		Utility: pallet_utility::{Pallet, Call, Event},
 
+		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Config<T>, Event<T>},
 		// EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>},
 		// Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, ValidateUnsigned},
 

@@ -1,6 +1,5 @@
 use super::*;
-use crate as treasury_reward;
-use sp_runtime::Permill;
+use sp_runtime::traits::One;
 use frame_support::pallet_prelude::DispatchResult;
 use frame_support::{construct_runtime, parameter_types, weights::Weight, PalletId};
 use frame_system as system;
@@ -10,13 +9,14 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	Perbill, AccountId32,
 };
+use frame_support::traits::GenesisBuild;
 use system::mocking::{MockBlock, MockUncheckedExtrinsic};
 pub(crate) type Balance = u64;
 
 // Configure a mock runtime to test the pallet.
 type UncheckedExtrinsic = MockUncheckedExtrinsic<Test>;
 type Block = MockBlock<Test>;
-
+pub const DOLLARS: Balance = 1_000_000_000;
 pub type AccountId = AccountId32;
 
 construct_runtime!(
@@ -27,8 +27,7 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
-		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Event<T>},
+		TreasuryReward: treasury_reward::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
@@ -82,30 +81,7 @@ impl pallet_balances::Config for Test {
 }
 
 parameter_types! {
-	pub const ProposalBond: Permill = Permill::from_percent(5);
-	pub const ProposalBondMinimum: u64 = 1;
-	pub const SpendPeriod: u64 = 2;
-	pub const Burn: Permill = Permill::from_percent(50);
 	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
-	pub const BountyUpdatePeriod: u32 = 20;
-	pub const BountyCuratorDeposit: Permill = Permill::from_percent(50);
-	pub const BountyValueMinimum: u64 = 1;
-}
-
-impl pallet_treasury::Config for Test {
-	type PalletId = TreasuryPalletId;
-	type Currency = pallet_balances::Pallet<Test>;
-	type ApproveOrigin = frame_system::EnsureRoot<AccountId>;
-	type RejectOrigin = frame_system::EnsureRoot<AccountId>;
-	type Event = Event;
-	type OnSlash = ();
-	type ProposalBond = ProposalBond;
-	type ProposalBondMinimum = ProposalBondMinimum;
-	type SpendPeriod = SpendPeriod;
-	type Burn = Burn;
-	type BurnDestination = ();  // Just gets burned.
-	type WeightInfo = ();
-	type SpendFunds = ();
 }
 
 parameter_types! {
@@ -155,15 +131,15 @@ pub(crate) fn new_test_ext(recipients: Option<Vec<AccountId>>, pcts: Option<Vec<
 		],
 	}.assimilate_storage(&mut t).unwrap();
 
-	let DOLLARS = 1_000_000_000;
-	// treasury_reward::GenesisConfig::<Test> {
-	// 	current_payout: 95 * DOLLARS,
-	// 	minting_interval: One::one(),
-	// 	recipients: recipients,
-	// 	recipient_percentages: pcts,
-	// }
-	// .assimilate_storage(&mut t)
-	// .unwrap();
+	
+	treasury_reward::GenesisConfig::<Test> {
+		current_payout: 95 * DOLLARS,
+		minting_interval: One::one(),
+		recipients: recipients,
+		recipient_percentages: pcts,
+	}
+	.assimilate_storage(&mut t)
+	.unwrap();
 
 	t.into()
 }
