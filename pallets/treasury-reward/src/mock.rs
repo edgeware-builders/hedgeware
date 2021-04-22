@@ -1,4 +1,5 @@
 use super::*;
+use crate as treasury_reward;
 use sp_runtime::traits::One;
 use frame_support::pallet_prelude::DispatchResult;
 use frame_support::{construct_runtime, parameter_types, weights::Weight, PalletId};
