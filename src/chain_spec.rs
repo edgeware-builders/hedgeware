@@ -140,7 +140,15 @@ fn testnet_genesis(
 				.map(|k| (k, 1 << 60))
 				.collect(),
 		},
+		pallet_democracy: parachain_runtime::DemocracyConfig::default(),
+		pallet_collective_Instance1: parachain_runtime::CouncilConfig::default(),
+		pallet_treasury: Default::default(),
+		pallet_elections_phragmen: Default::default(),
+		pallet_vesting: parachain_runtime::VestingConfig::default(),
+		pallet_contracts: parachain_runtime::ContractsConfig::default(),
 		pallet_sudo: parachain_runtime::SudoConfig { key: root_key },
 		parachain_info: parachain_runtime::ParachainInfoConfig { parachain_id: id },
+		treasury_reward: parachain_runtime::TreasuryRewardConfig::default(),
+		pallet_evm: Default::default(),
 	}
 }
