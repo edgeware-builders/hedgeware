@@ -1,7 +1,7 @@
 .DS_STORE
 .vscode
 target
-
+node_modules/
 interrupt_polkadot_mdns_issue_test/
 interrupt_test/
 polkadot_argument_parsing/
