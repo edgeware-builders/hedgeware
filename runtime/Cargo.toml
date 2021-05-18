@@ -1,5 +1,5 @@
 [package]
-name = 'cumulus-test-parachain-runtime'
+name = 'parachain-runtime'
 version = '0.1.0'
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = '2018'
@@ -13,7 +13,7 @@ treasury-reward = { path = "../pallets/treasury-reward", default-features = fals
 parachain-info = { path = "../pallets/parachain-info", default-features = false }
 
 # Hedgeware primitives
-rococo-parachain-primitives = { path = "../primitives", default-features = false }
+hedgeware-parachain-primitives = { path = "../primitives", default-features = false }
 
 # Substrate dependencies
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.1" }
@@ -133,7 +133,7 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-treasury/std",
 	"pallet-utility/std",
-	"rococo-parachain-primitives/std",
+	"hedgeware-parachain-primitives/std",
 	"cumulus-pallet-aura-ext/std",
 	"cumulus-pallet-dmp-queue/std",
 	"cumulus-pallet-parachain-system/std",

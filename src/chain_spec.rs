@@ -16,16 +16,16 @@
 
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
-use parachain_runtime::{AuraId};
+use hedgeware_parachain_runtime::{AuraId};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use rococo_parachain_primitives::{AccountId, Signature};
+use hedgeware_parachain_primitives::{AccountId, Signature};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec = sc_service::GenericChainSpec<parachain_runtime::GenesisConfig, Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<hedgeware_parachain_runtime::GenesisConfig, Extensions>;
 
 /// Helper function to generate a crypto pair from seed
 pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -139,35 +139,35 @@ fn testnet_genesis(
 	initial_authorities: Vec<AuraId>,
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
-) -> parachain_runtime::GenesisConfig {
-	parachain_runtime::GenesisConfig {
-		frame_system: parachain_runtime::SystemConfig {
-			code: parachain_runtime::WASM_BINARY
+) -> hedgeware_parachain_runtime::GenesisConfig {
+	hedgeware_parachain_runtime::GenesisConfig {
+		frame_system: hedgeware_parachain_runtime::SystemConfig {
+			code: hedgeware_parachain_runtime::WASM_BINARY
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 			changes_trie_config: Default::default(),
 		},
-		pallet_aura: parachain_runtime::AuraConfig {
+		pallet_aura: hedgeware_parachain_runtime::AuraConfig {
 			authorities: initial_authorities,
 		},
-		pallet_balances: parachain_runtime::BalancesConfig {
+		pallet_balances: hedgeware_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts
 				.iter()
 				.cloned()
 				.map(|k| (k, 1 << 60))
 				.collect(),
 		},
-		pallet_democracy: parachain_runtime::DemocracyConfig::default(),
-		pallet_collective_Instance1: parachain_runtime::CouncilConfig::default(),
+		pallet_democracy: hedgeware_parachain_runtime::DemocracyConfig::default(),
+		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
 		pallet_treasury: Default::default(),
 		pallet_elections_phragmen: Default::default(),
-		pallet_vesting: parachain_runtime::VestingConfig::default(),
-		pallet_contracts: parachain_runtime::ContractsConfig::default(),
-		treasury_reward: parachain_runtime::TreasuryRewardConfig::default(),
+		pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
+		pallet_contracts: hedgeware_parachain_runtime::ContractsConfig::default(),
+		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig::default(),
 		pallet_evm: Default::default(),
 		pallet_ethereum: Default::default(),
-		pallet_sudo: parachain_runtime::SudoConfig { key: root_key },
-		parachain_info: parachain_runtime::ParachainInfoConfig { parachain_id: id },
+		pallet_sudo: hedgeware_parachain_runtime::SudoConfig { key: root_key },
+		parachain_info: hedgeware_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		cumulus_pallet_aura_ext: Default::default(),
 	}
 }

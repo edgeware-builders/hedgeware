@@ -46,9 +46,9 @@ type Hash = sp_core::H256;
 
 // Native executor instance.
 native_executor_instance!(
-	pub ParachainRuntimeExecutor,
-	parachain_runtime::api::dispatch,
-	parachain_runtime::native_version,
+	pub HedgewareParachainRuntimeExecutor,
+	hedgeware_parachain_runtime::api::dispatch,
+	hedgeware_parachain_runtime::native_version,
 );
 
 /// Starts a `ServiceBuilder` for a full service.
@@ -173,7 +173,8 @@ where
 			Block,
 			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
 		> + sp_offchain::OffchainWorkerApi<Block>
-		+ sp_block_builder::BlockBuilder<Block>,
+		+ sp_block_builder::BlockBuilder<Block>
+		+ cumulus_primitives_core::CollectCollationInfo<Block>,
 	sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
 	Executor: sc_executor::NativeExecutionDispatch + 'static,
 	RB: Fn(
@@ -295,7 +296,6 @@ where
 			collator_key,
 			relay_chain_full_node,
 			spawner,
-			backend,
 			parachain_consensus,
 		};
 
@@ -318,15 +318,15 @@ where
 }
 
 /// Build the import queue for the rococo parachain runtime.
-pub fn parachain_build_import_queue(
-	client: Arc<TFullClient<Block, parachain_runtime::RuntimeApi, ParachainRuntimeExecutor>>,
+pub fn hedgeware_parachain_build_import_queue(
+	client: Arc<TFullClient<Block, hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor>>,
 	config: &Configuration,
 	telemetry: Option<TelemetryHandle>,
 	task_manager: &TaskManager,
 ) -> Result<
 	sp_consensus::DefaultImportQueue<
 		Block,
-		TFullClient<Block, parachain_runtime::RuntimeApi, ParachainRuntimeExecutor>,
+		TFullClient<Block, hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor>,
 	>,
 	sc_service::Error,
 > {
@@ -370,21 +370,21 @@ pub fn parachain_build_import_queue(
 }
 
 /// Start a rococo parachain node.
-pub async fn start_rococo_parachain_node(
+pub async fn start_hedgeware_parachain_node(
 	parachain_config: Configuration,
 	collator_key: CollatorPair,
 	polkadot_config: Configuration,
 	id: ParaId,
 ) -> sc_service::error::Result<
-	(TaskManager, Arc<TFullClient<Block, parachain_runtime::RuntimeApi, ParachainRuntimeExecutor>>)
+	(TaskManager, Arc<TFullClient<Block, hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor>>)
 > {
-	start_node_impl::<parachain_runtime::RuntimeApi, ParachainRuntimeExecutor, _, _, _>(
+	start_node_impl::<hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor, _, _, _>(
 		parachain_config,
 		collator_key,
 		polkadot_config,
 		id,
 		|_| Default::default(),
-		parachain_build_import_queue,
+		hedgeware_parachain_build_import_queue,
 		|client,
 		 prometheus_registry,
 		 telemetry,

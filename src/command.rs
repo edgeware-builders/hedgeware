@@ -93,7 +93,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&parachain_runtime::VERSION
+		&hedgeware_parachain_runtime::VERSION
 	}
 }
 
@@ -147,19 +147,19 @@ fn extract_genesis_wasm(chain_spec: &Box<dyn sc_service::ChainSpec>) -> Result<V
 		.ok_or_else(|| "Could not find wasm file in genesis state!".into())
 }
 
-use crate::service::{new_partial, ParachainRuntimeExecutor};
+use crate::service::{new_partial, HedgewareParachainRuntimeExecutor};
 
 macro_rules! construct_async_run {
 	(|$components:ident, $cli:ident, $cmd:ident, $config:ident| $( $code:tt )* ) => {{
 		let runner = $cli.create_runner($cmd)?;
 		runner.async_run(|$config| {
 			let $components = new_partial::<
-				parachain_runtime::RuntimeApi,
-				ParachainRuntimeExecutor,
+				hedgeware_parachain_runtime::RuntimeApi,
+				HedgewareParachainRuntimeExecutor,
 				_
 			>(
 				&$config,
-				crate::service::parachain_build_import_queue,
+				crate::service::hedgeware_parachain_build_import_queue,
 			)?;
 			let task_manager = $components.task_manager;
 			{ $( $code )* }.map(|v| (v, task_manager))
@@ -308,7 +308,7 @@ pub fn run() -> Result<()> {
 					}
 				);
 
-				crate::service::start_rococo_parachain_node(config, key, polkadot_config, id)
+				crate::service::start_hedgeware_parachain_node(config, key, polkadot_config, id)
 					.await
 					.map(|r| r.0)
 					.map_err(Into::into)

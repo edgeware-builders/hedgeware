@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
-use rococo_parachain_primitives::*;
+use hedgeware_parachain_primitives::*;
 
 pub mod distribution;
 

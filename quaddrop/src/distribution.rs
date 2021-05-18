@@ -1,6 +1,6 @@
 use hex_literal::*;
-use rococo_parachain_primitives::AccountId;
-use rococo_parachain_primitives::Balance;
+use hedgeware_parachain_primitives::AccountId;
+use hedgeware_parachain_primitives::Balance;
 
 /// Split endowment amount for Commonwealth
 pub const ENDOWMENT: Balance = 50_000_000_000_000_000_000_000;

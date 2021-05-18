@@ -23,9 +23,9 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Encode, Decode};
-use rococo_parachain_primitives::*;
+use hedgeware_parachain_primitives::*;
 use sp_api::impl_runtime_apis;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata, U256, H160, H256};
+use sp_core::{OpaqueMetadata, U256, H160, H256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{BlakeTwo256, Block as BlockT, IdentityLookup},
@@ -933,7 +933,7 @@ impl pallet_aura::Config for Runtime {
 construct_runtime! {
 	pub enum Runtime where
 		Block = Block,
-		NodeBlock = rococo_parachain_primitives::Block,
+		NodeBlock = hedgeware_parachain_primitives::Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
@@ -986,11 +986,11 @@ impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
 		UncheckedExtrinsic::new_unsigned(pallet_ethereum::Call::<Runtime>::transact(transaction).into())
 	}
 }
-impl fp_rpc::ConvertTransaction<rococo_parachain_primitives::UncheckedExtrinsic> for TransactionConverter {
-	fn convert_transaction(&self, transaction: pallet_ethereum::Transaction) -> rococo_parachain_primitives::UncheckedExtrinsic {
+impl fp_rpc::ConvertTransaction<hedgeware_parachain_primitives::UncheckedExtrinsic> for TransactionConverter {
+	fn convert_transaction(&self, transaction: pallet_ethereum::Transaction) -> hedgeware_parachain_primitives::UncheckedExtrinsic {
 		let extrinsic = UncheckedExtrinsic::new_unsigned(pallet_ethereum::Call::<Runtime>::transact(transaction).into());
 		let encoded = extrinsic.encode();
-		rococo_parachain_primitives::UncheckedExtrinsic::decode(&mut &encoded[..]).expect("Encoded extrinsic is always valid")
+		hedgeware_parachain_primitives::UncheckedExtrinsic::decode(&mut &encoded[..]).expect("Encoded extrinsic is always valid")
 	}
 }
 
@@ -1228,6 +1228,12 @@ impl_runtime_apis! {
 				Self::current_receipts(),
 				Self::current_transaction_statuses(),
 			)
+		}
+	}
+
+	impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
+		fn collect_collation_info() -> cumulus_primitives_core::CollationInfo {
+			ParachainSystem::collect_collation_info()
 		}
 	}
 }

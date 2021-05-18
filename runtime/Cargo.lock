@@ -1387,76 +1387,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cumulus-test-parachain-runtime"
-version = "0.1.0"
-dependencies = [
- "cumulus-pallet-aura-ext",
- "cumulus-pallet-dmp-queue",
- "cumulus-pallet-parachain-system",
- "cumulus-pallet-xcm",
- "cumulus-pallet-xcmp-queue",
- "cumulus-ping",
- "cumulus-primitives-core",
- "cumulus-primitives-utility",
- "fp-rpc",
- "frame-executive",
- "frame-support",
- "frame-system",
- "log",
- "pallet-assets",
- "pallet-aura",
- "pallet-balances",
- "pallet-bounties",
- "pallet-collective",
- "pallet-contracts",
- "pallet-contracts-primitives",
- "pallet-contracts-rpc-runtime-api",
- "pallet-democracy",
- "pallet-elections-phragmen",
- "pallet-ethereum",
- "pallet-evm",
- "pallet-evm-precompile-sha3fips",
- "pallet-evm-precompile-simple",
- "pallet-identity",
- "pallet-multisig",
- "pallet-proxy",
- "pallet-randomness-collective-flip",
- "pallet-recovery",
- "pallet-scheduler",
- "pallet-sudo",
- "pallet-timestamp",
- "pallet-tips",
- "pallet-transaction-payment",
- "pallet-treasury",
- "pallet-utility",
- "pallet-vesting",
- "pallet-xcm",
- "parachain-info",
- "parity-scale-codec",
- "polkadot-parachain",
- "rococo-parachain-primitives",
- "serde",
- "sp-api",
- "sp-block-builder",
- "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
- "sp-io",
- "sp-offchain",
- "sp-runtime",
- "sp-session",
- "sp-std",
- "sp-transaction-pool",
- "sp-version",
- "static_assertions",
- "substrate-wasm-builder",
- "treasury-reward",
- "xcm",
- "xcm-builder",
- "xcm-executor",
-]
-
-[[package]]
 name = "curve25519-dalek"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2591,6 +2521,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87cbf45460356b7deeb5e3415b5563308c0a9b057c85e12b06ad551f98d0a6ac"
 dependencies = [
  "unicode-segmentation",
+]
+
+[[package]]
+name = "hedgeware-parachain-primitives"
+version = "0.1.0"
+dependencies = [
+ "sp-core",
+ "sp-runtime",
 ]
 
 [[package]]
@@ -5212,6 +5150,76 @@ dependencies = [
 ]
 
 [[package]]
+name = "parachain-runtime"
+version = "0.1.0"
+dependencies = [
+ "cumulus-pallet-aura-ext",
+ "cumulus-pallet-dmp-queue",
+ "cumulus-pallet-parachain-system",
+ "cumulus-pallet-xcm",
+ "cumulus-pallet-xcmp-queue",
+ "cumulus-ping",
+ "cumulus-primitives-core",
+ "cumulus-primitives-utility",
+ "fp-rpc",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "hedgeware-parachain-primitives",
+ "log",
+ "pallet-assets",
+ "pallet-aura",
+ "pallet-balances",
+ "pallet-bounties",
+ "pallet-collective",
+ "pallet-contracts",
+ "pallet-contracts-primitives",
+ "pallet-contracts-rpc-runtime-api",
+ "pallet-democracy",
+ "pallet-elections-phragmen",
+ "pallet-ethereum",
+ "pallet-evm",
+ "pallet-evm-precompile-sha3fips",
+ "pallet-evm-precompile-simple",
+ "pallet-identity",
+ "pallet-multisig",
+ "pallet-proxy",
+ "pallet-randomness-collective-flip",
+ "pallet-recovery",
+ "pallet-scheduler",
+ "pallet-sudo",
+ "pallet-timestamp",
+ "pallet-tips",
+ "pallet-transaction-payment",
+ "pallet-treasury",
+ "pallet-utility",
+ "pallet-vesting",
+ "pallet-xcm",
+ "parachain-info",
+ "parity-scale-codec",
+ "polkadot-parachain",
+ "serde",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "static_assertions",
+ "substrate-wasm-builder",
+ "treasury-reward",
+ "xcm",
+ "xcm-builder",
+ "xcm-executor",
+]
+
+[[package]]
 name = "parity-db"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7019,14 +7027,6 @@ checksum = "c749134fda8bfc90d0de643d59bfc841dcb3ac8a1062e12b6754bd60235c48b3"
 dependencies = [
  "libc",
  "librocksdb-sys",
-]
-
-[[package]]
-name = "rococo-parachain-primitives"
-version = "0.1.0"
-dependencies = [
- "sp-core",
- "sp-runtime",
 ]
 
 [[package]]
