@@ -76,6 +76,14 @@ polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "r
 polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.1" }
 polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.1" }
 
+# Webb
+merkle = { package = "pallet-merkle", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1" }
+mixer = { package = "pallet-mixer", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1" }
+merkle-rpc = { package = "pallet-merkle-rpc", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1", optional = true }
+webb-currencies = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1" }
+webb-tokens = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1" }
+webb-traits = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.1" }
+
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.1" }
 
