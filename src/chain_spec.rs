@@ -95,7 +95,7 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 		None,
 		None,
 		Extensions {
-			relay_chain: "westend-dev".into(),
+			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
 		},
 	)
@@ -128,7 +128,7 @@ pub fn staging_test_net(id: ParaId) -> ChainSpec {
 		None,
 		None,
 		Extensions {
-			relay_chain: "westend-dev".into(),
+			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
 		},
 	)
@@ -162,7 +162,6 @@ fn testnet_genesis(
 		pallet_treasury: Default::default(),
 		pallet_elections_phragmen: Default::default(),
 		pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
-		pallet_contracts: hedgeware_parachain_runtime::ContractsConfig::default(),
 		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig::default(),
 		pallet_evm: Default::default(),
 		pallet_ethereum: Default::default(),
