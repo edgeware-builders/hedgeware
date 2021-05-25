@@ -47,7 +47,7 @@ fn load_spec(
 		"track" => Ok(Box::new(chain_spec::ChainSpec::from_json_bytes(
 			&include_bytes!("../res/track.json")[..],
 		)?)),
-		"" => Ok(Box::new(chain_spec::get_chain_spec(para_id))),
+		"" | "local"=> Ok(Box::new(chain_spec::get_chain_spec(para_id))),
 		path => Ok({
 			let chain_spec = chain_spec::ChainSpec::from_json_file(
 			path.into(),
