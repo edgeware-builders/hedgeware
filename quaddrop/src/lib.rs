@@ -33,11 +33,3 @@ pub fn parse_allocation() -> Result<Allocation> {
 		balances,
 	})
 }
-
-#[cfg(test)]
-mod tests {
-	#[test]
-	fn it_works() {
-		assert_eq!(2 + 2, 4);
-	}
-}
