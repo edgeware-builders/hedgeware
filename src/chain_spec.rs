@@ -21,7 +21,7 @@ use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::traits::{IdentifyAccount, Verify, One};
 use hedgeware_parachain_primitives::{AccountId, Signature};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
@@ -95,7 +95,7 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 		None,
 		None,
 		Extensions {
-			relay_chain: "westend-dev".into(),
+			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
 		},
 	)
@@ -128,7 +128,7 @@ pub fn staging_test_net(id: ParaId) -> ChainSpec {
 		None,
 		None,
 		Extensions {
-			relay_chain: "westend-dev".into(),
+			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
 		},
 	)
@@ -162,8 +162,12 @@ fn testnet_genesis(
 		pallet_treasury: Default::default(),
 		pallet_elections_phragmen: Default::default(),
 		pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
-		pallet_contracts: hedgeware_parachain_runtime::ContractsConfig::default(),
-		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig::default(),
+		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig{
+      current_payout: Default::default(),
+			minting_interval: One::one(),
+      recipients: Default::default(),
+      recipient_percentages: Default::default(),
+    },
 		pallet_evm: Default::default(),
 		pallet_ethereum: Default::default(),
 		pallet_sudo: hedgeware_parachain_runtime::SudoConfig { key: root_key },
