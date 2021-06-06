@@ -84,6 +84,9 @@ webb-currencies = { git = "https://github.com/webb-tools/anon", branch = "polkad
 webb-tokens = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
 webb-traits = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
 
+# Quadratic drop
+quaddrop = { path = "./quaddrop" }
+
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.3" }
 

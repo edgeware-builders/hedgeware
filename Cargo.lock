@@ -518,7 +518,7 @@ source = "git+https://github.com/paritytech/grandpa-bridge-gadget?branch=polkado
 dependencies = [
  "beefy-primitives",
  "futures 0.3.15",
- "hex",
+ "hex 0.4.3",
  "log",
  "parity-scale-codec 2.1.1",
  "parking_lot 0.11.1",
@@ -3113,6 +3113,7 @@ dependencies = [
  "polkadot-test-client",
  "polkadot-test-runtime",
  "polkadot-test-service",
+ "quaddrop",
  "rand 0.7.3",
  "sc-basic-authorship",
  "sc-chain-spec",
@@ -3172,6 +3173,12 @@ checksum = "322f4de77956e22ed0e5032c359a0f1273f1f7f0d79bfa3b8ffbc730d7fbcc5c"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "hex"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
 
 [[package]]
 name = "hex"
@@ -6245,7 +6252,7 @@ dependencies = [
  "blake2-rfc",
  "crc32fast",
  "fs2",
- "hex",
+ "hex 0.4.3",
  "libc",
  "log",
  "memmap2",
@@ -7676,7 +7683,7 @@ dependencies = [
  "frame-system",
  "futures 0.1.31",
  "futures 0.3.15",
- "hex",
+ "hex 0.4.3",
  "pallet-balances",
  "pallet-staking",
  "pallet-transaction-payment",
@@ -7965,6 +7972,18 @@ dependencies = [
  "byteorder",
  "log",
  "parity-wasm 0.42.2",
+]
+
+[[package]]
+name = "quaddrop"
+version = "0.1.0"
+dependencies = [
+ "hedgeware-parachain-primitives",
+ "hex 0.3.2",
+ "hex-literal 0.2.1",
+ "parity-scale-codec 2.1.1",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8811,7 +8830,7 @@ dependencies = [
  "chrono",
  "fdlimit",
  "futures 0.3.15",
- "hex",
+ "hex 0.4.3",
  "libp2p 0.37.1",
  "log",
  "names",
@@ -9359,7 +9378,7 @@ dependencies = [
  "derive_more 0.99.14",
  "futures 0.3.15",
  "futures-util",
- "hex",
+ "hex 0.4.3",
  "merlin",
  "parking_lot 0.11.1",
  "rand 0.7.3",
@@ -9380,7 +9399,7 @@ dependencies = [
  "derive_more 0.99.14",
  "futures 0.3.15",
  "futures-util",
- "hex",
+ "hex 0.4.3",
  "merlin",
  "parking_lot 0.11.1",
  "rand 0.7.3",
@@ -9429,7 +9448,7 @@ dependencies = [
  "fork-tree",
  "futures 0.3.15",
  "futures-timer 3.0.2",
- "hex",
+ "hex 0.4.3",
  "ip_network",
  "libp2p 0.37.1",
  "linked-hash-map",
@@ -9489,7 +9508,7 @@ dependencies = [
  "fnv",
  "futures 0.3.15",
  "futures-timer 3.0.2",
- "hex",
+ "hex 0.4.3",
  "hyper 0.13.10",
  "hyper-rustls",
  "log",
@@ -10833,7 +10852,7 @@ dependencies = [
  "futures 0.3.15",
  "hash-db",
  "hash256-std-hasher",
- "hex",
+ "hex 0.4.3",
  "impl-serde",
  "lazy_static",
  "libsecp256k1",
@@ -10877,7 +10896,7 @@ dependencies = [
  "futures 0.3.15",
  "hash-db",
  "hash256-std-hasher",
- "hex",
+ "hex 0.4.3",
  "impl-serde",
  "lazy_static",
  "libsecp256k1",
@@ -10922,7 +10941,7 @@ dependencies = [
  "futures 0.3.15",
  "hash-db",
  "hash256-std-hasher",
- "hex",
+ "hex 0.4.3",
  "impl-serde",
  "lazy_static",
  "libsecp256k1",
@@ -12226,7 +12245,7 @@ dependencies = [
  "futures 0.1.31",
  "futures 0.3.15",
  "hash-db",
- "hex",
+ "hex 0.4.3",
  "parity-scale-codec 2.1.1",
  "sc-client-api 3.0.0 (git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.3)",
  "sc-client-db",
@@ -13079,7 +13098,7 @@ checksum = "e11fe9a9348741cf134085ad57c249508345fe16411b3d7fb4ff2da2f1d6382e"
 dependencies = [
  "byteorder",
  "crunchy",
- "hex",
+ "hex 0.4.3",
  "static_assertions",
 ]
 
