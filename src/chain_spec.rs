@@ -151,11 +151,7 @@ fn testnet_genesis(
 			authorities: initial_authorities,
 		},
 		pallet_balances: hedgeware_parachain_runtime::BalancesConfig {
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, 1 << 60))
-				.collect(),
+			balances: vec![],
 		},
 		pallet_democracy: hedgeware_parachain_runtime::DemocracyConfig::default(),
 		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
