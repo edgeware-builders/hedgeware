@@ -3,7 +3,7 @@ use hedgeware_parachain_primitives::AccountId;
 use hedgeware_parachain_primitives::Balance;
 
 /// Split endowment amount for founders
-pub const ENDOWMENT: Balance = 500_000_000_000_000_000_000_000;
+pub const ENDOWMENT: Balance = 50_000_000_000_000_000_000_000;
 
 /// Genesis allocation that will fit into the "balances" module for founders/core devs
 pub fn get_dev_allocation() -> Vec<(AccountId, Balance)> {

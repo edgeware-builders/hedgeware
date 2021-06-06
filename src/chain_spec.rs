@@ -22,8 +22,7 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify, One};
-use hedgeware_parachain_primitives::{AccountId, Signature};
-
+use hedgeware_parachain_primitives::{AccountId, Signature, Balance};
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<hedgeware_parachain_runtime::GenesisConfig, Extensions>;
 
@@ -137,9 +136,11 @@ pub fn staging_test_net(id: ParaId) -> ChainSpec {
 fn testnet_genesis(
 	root_key: AccountId,
 	initial_authorities: Vec<AuraId>,
-	endowed_accounts: Vec<AccountId>,
+	_endowed_accounts: Vec<AccountId>,
 	id: ParaId,
 ) -> hedgeware_parachain_runtime::GenesisConfig {
+	let balances = quaddrop::parse_allocation("quaddrop/allocation/dump.json".to_string()).unwrap().balances;
+
 	hedgeware_parachain_runtime::GenesisConfig {
 		frame_system: hedgeware_parachain_runtime::SystemConfig {
 			code: hedgeware_parachain_runtime::WASM_BINARY
@@ -151,7 +152,7 @@ fn testnet_genesis(
 			authorities: initial_authorities,
 		},
 		pallet_balances: hedgeware_parachain_runtime::BalancesConfig {
-			balances: quaddrop::parse_allocation().unwrap().balances,
+			balances: balances,
 		},
 		pallet_democracy: hedgeware_parachain_runtime::DemocracyConfig::default(),
 		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
