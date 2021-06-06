@@ -107,8 +107,8 @@ impl_opaque_keys! {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("cumulus-test-parachain"),
-	impl_name: create_runtime_str!("cumulus-test-parachain"),
+	spec_name: create_runtime_str!("hedgeware-parachain"),
+	impl_name: create_runtime_str!("hedgeware-parachain"),
 	authoring_version: 1,
 	spec_version: 18,
 	impl_version: 0,

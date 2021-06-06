@@ -22,7 +22,7 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify, One};
-use hedgeware_parachain_primitives::{AccountId, Signature, Balance};
+use hedgeware_parachain_primitives::{AccountId, Signature};
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<hedgeware_parachain_runtime::GenesisConfig, Extensions>;
 
@@ -61,6 +61,14 @@ where
 }
 
 pub fn get_chain_spec(id: ParaId) -> ChainSpec {
+	let data = r#"
+		{
+			"ss58Format": 777,
+			"tokenDecimals": 18,
+			"tokenSymbol": "HEDG"
+		}"#;
+	let properties = serde_json::from_str(data).unwrap();
+
 	ChainSpec::from_genesis(
 		"Local Testnet",
 		"local_testnet",
@@ -92,7 +100,7 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 		vec![],
 		None,
 		None,
-		None,
+		properties,
 		Extensions {
 			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
@@ -101,6 +109,14 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 }
 
 pub fn staging_test_net(id: ParaId) -> ChainSpec {
+	let data = r#"
+		{
+			"ss58Format": 777,
+			"tokenDecimals": 18,
+			"tokenSymbol": "HEDG"
+		}"#;
+	let properties = serde_json::from_str(data).unwrap();
+
 	ChainSpec::from_genesis(
 		"Staging Testnet",
 		"staging_testnet",
@@ -125,7 +141,7 @@ pub fn staging_test_net(id: ParaId) -> ChainSpec {
 		Vec::new(),
 		None,
 		None,
-		None,
+		properties,
 		Extensions {
 			relay_chain: "rococo-local".into(),
 			para_id: id.into(),
