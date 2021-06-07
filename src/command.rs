@@ -48,6 +48,8 @@ fn load_spec(
 			&include_bytes!("../res/track.json")[..],
 		)?)),
 		"" | "local"=> Ok(Box::new(chain_spec::get_chain_spec(para_id))),
+		"hedgeware-rococo" => Ok(Box::new(chain_spec::hedgeware_rococo_testnet())),
+		"hedgeware-config" => Ok(Box::new(chain_spec::hedgeware(para_id))),
 		path => Ok({
 			let chain_spec = chain_spec::ChainSpec::from_json_file(
 			path.into(),

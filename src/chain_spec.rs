@@ -22,7 +22,7 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify, One};
-use hedgeware_parachain_primitives::{AccountId, Signature};
+use hedgeware_parachain_primitives::{AccountId, Signature, Balance};
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<hedgeware_parachain_runtime::GenesisConfig, Extensions>;
 
@@ -51,6 +51,58 @@ impl Extensions {
 }
 
 type AccountPublic = <Signature as Verify>::Signer;
+
+/// Mainnet configuration
+pub fn hedgeware_rococo_testnet() -> ChainSpec {
+	match ChainSpec::from_json_bytes(&include_bytes!("../res/hedgeware.chainspec.json")[..]) {
+		Ok(spec) => spec,
+		Err(e) => panic!("{}", e),
+	}
+}
+
+pub fn hedgeware(id: ParaId) -> ChainSpec {
+	let data = r#"
+		{
+			"ss58Format": 777,
+			"tokenDecimals": 18,
+			"tokenSymbol": "tHEDG"
+		}"#;
+	let properties = serde_json::from_str(data).unwrap();
+	ChainSpec::from_genesis(
+		"Hedgeware",
+		"hedgeware",
+		ChainType::Live,
+		move || {
+			testnet_genesis(
+				hex!["0000000000000000000000000000000000000000000000000000000000000000"].into(),
+				vec![get_from_seed::<AuraId>("Alice")],
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
+					get_account_id_from_seed::<sr25519::Public>("Eve"),
+					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+				],
+				id,
+			)
+		},
+		Vec::new(),
+		None,
+		None,
+		properties,
+		Extensions {
+			relay_chain: "rococo".into(),
+			para_id: id.into(),
+		},
+	)
+}
 
 /// Helper function to generate an account ID from seed
 pub fn get_account_id_from_seed<TPublic: Public>(seed: &str) -> AccountId
@@ -155,8 +207,18 @@ fn testnet_genesis(
 	_endowed_accounts: Vec<AccountId>,
 	id: ParaId,
 ) -> hedgeware_parachain_runtime::GenesisConfig {
-	let balances = quaddrop::parse_allocation("quaddrop/allocation/dump.json".to_string()).unwrap().balances;
-
+	let mut balances = quaddrop::parse_allocation("quaddrop/allocation/dump.json".to_string()).unwrap().balances;
+	balances = balances
+		.iter()
+		.map(|b| b)
+		.chain(
+			_endowed_accounts.clone()
+				.iter()
+				.map(|acct| (acct, 10_000_000_000_000_000_000u128))
+				.collect::<Vec<AccountId, Balance>>()
+		)
+		.map(|b| b.clone())
+		.collect();
 	hedgeware_parachain_runtime::GenesisConfig {
 		frame_system: hedgeware_parachain_runtime::SystemConfig {
 			code: hedgeware_parachain_runtime::WASM_BINARY
@@ -168,7 +230,7 @@ fn testnet_genesis(
 			authorities: initial_authorities,
 		},
 		pallet_balances: hedgeware_parachain_runtime::BalancesConfig {
-			balances: balances,
+			balances: balances.clone(),
 		},
 		pallet_democracy: hedgeware_parachain_runtime::DemocracyConfig::default(),
 		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
