@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Cumulus.  If not, see <http://www.gnu.org/licenses/>.
 
+
 use cumulus_primitives_core::ParaId;
 use hex_literal::hex;
 use hedgeware_parachain_runtime::{AuraId};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
-use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify, One};
-use hedgeware_parachain_primitives::{AccountId, Signature, Balance};
+use hedgeware_parachain_primitives::{AccountId, Signature};
+
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec = sc_service::GenericChainSpec<hedgeware_parachain_runtime::GenesisConfig, Extensions>;
 
@@ -76,21 +78,8 @@ pub fn hedgeware(id: ParaId) -> ChainSpec {
 			testnet_genesis(
 				hex!["0000000000000000000000000000000000000000000000000000000000000000"].into(),
 				vec![get_from_seed::<AuraId>("Alice")],
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-				],
 				id,
+				true,
 			)
 		},
 		Vec::new(),
@@ -132,21 +121,8 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 					get_from_seed::<AuraId>("Alice"),
 					get_from_seed::<AuraId>("Bob"),
 				],
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-				],
 				id,
+				true,
 			)
 		},
 		vec![],
@@ -160,65 +136,17 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 	)
 }
 
-pub fn staging_test_net(id: ParaId) -> ChainSpec {
-	let data = r#"
-		{
-			"ss58Format": 777,
-			"tokenDecimals": 18,
-			"tokenSymbol": "HEDG"
-		}"#;
-	let properties = serde_json::from_str(data).unwrap();
-
-	ChainSpec::from_genesis(
-		"Staging Testnet",
-		"staging_testnet",
-		ChainType::Live,
-		move || {
-			testnet_genesis(
-				hex!["9ed7705e3c7da027ba0583a22a3212042f7e715d3c168ba14f1424e2bc111d00"].into(),
-				vec![
-					// $secret//one
-					hex!["aad9fa2249f87a210a0f93400b7f90e47b810c6d65caa0ca3f5af982904c2a33"]
-						.unchecked_into(),
-					// $secret//two
-					hex!["d47753f0cca9dd8da00c70e82ec4fc5501a69c49a5952a643d18802837c88212"]
-						.unchecked_into(),
-				],
-				vec![
-					hex!["9ed7705e3c7da027ba0583a22a3212042f7e715d3c168ba14f1424e2bc111d00"].into(),
-				],
-				id,
-			)
-		},
-		Vec::new(),
-		None,
-		None,
-		properties,
-		Extensions {
-			relay_chain: "rococo-local".into(),
-			para_id: id.into(),
-		},
-	)
-}
-
 fn testnet_genesis(
 	root_key: AccountId,
 	initial_authorities: Vec<AuraId>,
-	_endowed_accounts: Vec<AccountId>,
 	id: ParaId,
+	dev_accounts: bool,
 ) -> hedgeware_parachain_runtime::GenesisConfig {
-	let mut balances = quaddrop::parse_allocation("quaddrop/allocation/dump.json".to_string()).unwrap().balances;
-	balances = balances
-		.iter()
-		.map(|b| b)
-		.chain(
-			_endowed_accounts.clone()
-				.iter()
-				.map(|acct| (acct, 10_000_000_000_000_000_000u128))
-				.collect::<Vec<AccountId, Balance>>()
-		)
-		.map(|b| b.clone())
-		.collect();
+	let balances = quaddrop::parse_allocation(
+		"quaddrop/allocation/dump.json".to_string(),
+		dev_accounts
+	).unwrap().balances;
+
 	hedgeware_parachain_runtime::GenesisConfig {
 		frame_system: hedgeware_parachain_runtime::SystemConfig {
 			code: hedgeware_parachain_runtime::WASM_BINARY
