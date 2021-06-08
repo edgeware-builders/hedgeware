@@ -48,7 +48,7 @@ pub mod pallet {
 	impl Default for GenesisConfig {
 		fn default() -> Self {
 			Self {
-				parachain_id: 100.into()
+				parachain_id: 2023.into()
 			}
 		}
 	}

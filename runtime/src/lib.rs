@@ -437,12 +437,12 @@ impl cumulus_pallet_dmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
-impl cumulus_ping::Config for Runtime {
-	type Event = Event;
-	type Origin = Origin;
-	type Call = Call;
-	type XcmSender = XcmRouter;
-}
+// impl cumulus_ping::Config for Runtime {
+// 	type Event = Event;
+// 	type Origin = Origin;
+// 	type Call = Call;
+// 	type XcmSender = XcmRouter;
+// }
 
 parameter_types! {
 	pub const AssetDeposit: Balance = 1 * DOLLARS;
@@ -507,57 +507,57 @@ parameter_types! {
 	pub const MaxPending: u16 = 32;
 }
 
-/// The type used to represent the kinds of proxying allowed.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug)]
-pub enum ProxyType {
-	Any,
-	NonTransfer,
-	Governance,
-}
-impl Default for ProxyType { fn default() -> Self { Self::Any } }
-impl InstanceFilter<Call> for ProxyType {
-	fn filter(&self, c: &Call) -> bool {
-		match self {
-			ProxyType::Any => true,
-			ProxyType::NonTransfer => !matches!(
-				c,
-				Call::Balances(..) |
-				Call::Vesting(pallet_vesting::Call::vested_transfer(..))
-			),
-			ProxyType::Governance => matches!(
-				c,
-				Call::Democracy(..) |
-				Call::Council(..) |
-				Call::Elections(..) |
-				Call::Treasury(..)
-			),
-		}
-	}
-	fn is_superset(&self, o: &Self) -> bool {
-		match (self, o) {
-			(x, y) if x == y => true,
-			(ProxyType::Any, _) => true,
-			(_, ProxyType::Any) => false,
-			(ProxyType::NonTransfer, _) => true,
-			_ => false,
-		}
-	}
-}
+// /// The type used to represent the kinds of proxying allowed.
+// #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug)]
+// pub enum ProxyType {
+// 	Any,
+// 	NonTransfer,
+// 	Governance,
+// }
+// impl Default for ProxyType { fn default() -> Self { Self::Any } }
+// impl InstanceFilter<Call> for ProxyType {
+// 	fn filter(&self, c: &Call) -> bool {
+// 		match self {
+// 			ProxyType::Any => true,
+// 			ProxyType::NonTransfer => !matches!(
+// 				c,
+// 				Call::Balances(..) |
+// 				Call::Vesting(pallet_vesting::Call::vested_transfer(..))
+// 			),
+// 			ProxyType::Governance => matches!(
+// 				c,
+// 				Call::Democracy(..) |
+// 				Call::Council(..) |
+// 				Call::Elections(..) |
+// 				Call::Treasury(..)
+// 			),
+// 		}
+// 	}
+// 	fn is_superset(&self, o: &Self) -> bool {
+// 		match (self, o) {
+// 			(x, y) if x == y => true,
+// 			(ProxyType::Any, _) => true,
+// 			(_, ProxyType::Any) => false,
+// 			(ProxyType::NonTransfer, _) => true,
+// 			_ => false,
+// 		}
+// 	}
+// }
 
-impl pallet_proxy::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-	type Currency = Balances;
-	type ProxyType = ProxyType;
-	type ProxyDepositBase = ProxyDepositBase;
-	type ProxyDepositFactor = ProxyDepositFactor;
-	type MaxProxies = MaxProxies;
-	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
-	type MaxPending = MaxPending;
-	type CallHasher = BlakeTwo256;
-	type AnnouncementDepositBase = AnnouncementDepositBase;
-	type AnnouncementDepositFactor = AnnouncementDepositFactor;
-}
+// impl pallet_proxy::Config for Runtime {
+// 	type Event = Event;
+// 	type Call = Call;
+// 	type Currency = Balances;
+// 	type ProxyType = ProxyType;
+// 	type ProxyDepositBase = ProxyDepositBase;
+// 	type ProxyDepositFactor = ProxyDepositFactor;
+// 	type MaxProxies = MaxProxies;
+// 	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+// 	type MaxPending = MaxPending;
+// 	type CallHasher = BlakeTwo256;
+// 	type AnnouncementDepositBase = AnnouncementDepositBase;
+// 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+// }
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -806,58 +806,58 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 	pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>
 >;
 
-parameter_types! {
-	pub const BasicDeposit: Balance = 10 * DOLLARS;       // 258 bytes on-chain
-	pub const FieldDeposit: Balance = 250 * CENTS;        // 66 bytes on-chain
-	pub const SubAccountDeposit: Balance = 2 * DOLLARS;   // 53 bytes on-chain
-	pub const MaxSubAccounts: u32 = 100;
-	pub const MaxAdditionalFields: u32 = 100;
-	pub const MaxRegistrars: u32 = 20;
-}
+// parameter_types! {
+// 	pub const BasicDeposit: Balance = 10 * DOLLARS;       // 258 bytes on-chain
+// 	pub const FieldDeposit: Balance = 250 * CENTS;        // 66 bytes on-chain
+// 	pub const SubAccountDeposit: Balance = 2 * DOLLARS;   // 53 bytes on-chain
+// 	pub const MaxSubAccounts: u32 = 100;
+// 	pub const MaxAdditionalFields: u32 = 100;
+// 	pub const MaxRegistrars: u32 = 20;
+// }
 
-impl pallet_identity::Config for Runtime {
-	type Event = Event;
-	type Currency = Balances;
-	type BasicDeposit = BasicDeposit;
-	type FieldDeposit = FieldDeposit;
-	type SubAccountDeposit = SubAccountDeposit;
-	type MaxSubAccounts = MaxSubAccounts;
-	type MaxAdditionalFields = MaxAdditionalFields;
-	type MaxRegistrars = MaxRegistrars;
-	type Slashed = Treasury;
-	type ForceOrigin = EnsureRootOrHalfCouncil;
-	type RegistrarOrigin = EnsureRootOrHalfCouncil;
-	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
-}
+// impl pallet_identity::Config for Runtime {
+// 	type Event = Event;
+// 	type Currency = Balances;
+// 	type BasicDeposit = BasicDeposit;
+// 	type FieldDeposit = FieldDeposit;
+// 	type SubAccountDeposit = SubAccountDeposit;
+// 	type MaxSubAccounts = MaxSubAccounts;
+// 	type MaxAdditionalFields = MaxAdditionalFields;
+// 	type MaxRegistrars = MaxRegistrars;
+// 	type Slashed = Treasury;
+// 	type ForceOrigin = EnsureRootOrHalfCouncil;
+// 	type RegistrarOrigin = EnsureRootOrHalfCouncil;
+// 	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
+// }
 
-parameter_types! {
-	pub const ConfigDepositBase: Balance = 5 * DOLLARS;
-	pub const FriendDepositFactor: Balance = 50 * CENTS;
-	pub const MaxFriends: u16 = 9;
-	pub const RecoveryDeposit: Balance = 5 * DOLLARS;
-}
+// parameter_types! {
+// 	pub const ConfigDepositBase: Balance = 5 * DOLLARS;
+// 	pub const FriendDepositFactor: Balance = 50 * CENTS;
+// 	pub const MaxFriends: u16 = 9;
+// 	pub const RecoveryDeposit: Balance = 5 * DOLLARS;
+// }
 
-impl pallet_recovery::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-	type Currency = Balances;
-	type ConfigDepositBase = ConfigDepositBase;
-	type FriendDepositFactor = FriendDepositFactor;
-	type MaxFriends = MaxFriends;
-	type RecoveryDeposit = RecoveryDeposit;
-}
+// impl pallet_recovery::Config for Runtime {
+// 	type Event = Event;
+// 	type Call = Call;
+// 	type Currency = Balances;
+// 	type ConfigDepositBase = ConfigDepositBase;
+// 	type FriendDepositFactor = FriendDepositFactor;
+// 	type MaxFriends = MaxFriends;
+// 	type RecoveryDeposit = RecoveryDeposit;
+// }
 
-parameter_types! {
-	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
-}
+// parameter_types! {
+// 	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
+// }
 
-impl pallet_vesting::Config for Runtime {
-	type Event = Event;
-	type Currency = Balances;
-	type BlockNumberToBalance = ConvertInto;
-	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
-}
+// impl pallet_vesting::Config for Runtime {
+// 	type Event = Event;
+// 	type Currency = Balances;
+// 	type BlockNumberToBalance = ConvertInto;
+// 	type MinVestedTransfer = MinVestedTransfer;
+// 	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+// }
 
 parameter_types! {
 	pub const MinimumTreasuryPct: Percent = Percent::from_percent(50);
@@ -1023,11 +1023,11 @@ construct_runtime! {
 		Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Call, Storage},
-		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>},
-		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>},
-		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>},
+		// Identity: pallet_identity::{Pallet, Call, Storage, Event<T>},
+		// Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>},
+		// Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
-		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
+		// Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>},
 		Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>},
 		Tips: pallet_tips::{Pallet, Call, Storage, Event<T>},
@@ -1053,7 +1053,7 @@ construct_runtime! {
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Call, Event<T>, Origin} = 52,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 53,
 
-		Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
+		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
 	}
 }
 

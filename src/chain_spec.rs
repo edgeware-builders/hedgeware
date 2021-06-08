@@ -167,7 +167,7 @@ fn testnet_genesis(
 		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
 		pallet_treasury: Default::default(),
 		pallet_elections_phragmen: Default::default(),
-		pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
+		// pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
 		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig{
 			current_payout: Default::default(),
 				minting_interval: One::one(),
