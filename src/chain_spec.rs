@@ -77,7 +77,10 @@ pub fn hedgeware(id: ParaId) -> ChainSpec {
 		move || {
 			testnet_genesis(
 				hex!["0000000000000000000000000000000000000000000000000000000000000000"].into(),
-				vec![get_from_seed::<AuraId>("Alice")],
+				vec![
+					get_from_seed::<AuraId>("Alice"),
+					get_from_seed::<AuraId>("Bob"),
+				],
 				id,
 				true,
 			)
