@@ -77,6 +77,13 @@ polkadot-service = { git = "https://github.com/paritytech/polkadot", branch = "r
 polkadot-cli = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.3" }
 polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.3" }
 
+# Hedgeware
+hedgeware-rpc-txpool = { path = "./client/rpc/txpool" }
+hedgeware-rpc-primitives-txpool = { path = "./primitives/rpc/txpool" }
+hedgeware-rpc-debug = { path = "./client/rpc/debug" }
+hedgeware-rpc-primitives-debug = { path = "./primitives/rpc/debug" }
+hedgeware-rpc-trace = { path = "./client/rpc/trace" }
+
 # Webb
 merkle = { package = "pallet-merkle", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
 mixer = { package = "pallet-mixer", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
