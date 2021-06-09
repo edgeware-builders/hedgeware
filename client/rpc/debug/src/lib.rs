@@ -19,7 +19,7 @@ use futures::{
 	FutureExt, SinkExt, StreamExt,
 };
 use jsonrpc_core::Result as RpcResult;
-pub use edgeware_rpc_core_debug::{Debug as DebugT, DebugServer, TraceParams};
+pub use hedgeware_rpc_core_debug::{Debug as DebugT, DebugServer, TraceParams};
 
 use tokio::{
 	self,
@@ -29,7 +29,7 @@ use tokio::{
 use ethereum_types::{H128, H256};
 use fc_rpc::{frontier_backend_client, internal_err};
 use fp_rpc::EthereumRuntimeRPCApi;
-use edgeware_rpc_primitives_debug::{single, DebugRuntimeApi};
+use hedgeware_rpc_primitives_debug::{single, DebugRuntimeApi};
 use sc_client_api::backend::Backend;
 use sp_api::{BlockId, HeaderT, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder;

@@ -51,6 +51,19 @@ native_executor_instance!(
 	hedgeware_parachain_runtime::native_version,
 );
 
+// TODO This is copied from frontier. It should be imported instead after
+// https://github.com/paritytech/frontier/issues/333 is solved
+pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
+	Ok(Arc::new(fc_db::Backend::<Block>::new(
+		&fc_db::DatabaseSettings {
+			source: fc_db::DatabaseSettingsSrc::RocksDb {
+				path: frontier_database_dir(&config),
+				cache_size: 0,
+			},
+		},
+	)?))
+}
+
 /// Starts a `ServiceBuilder` for a full service.
 ///
 /// Use this macro if you don't actually need the full service, but just the builder in order to
@@ -63,7 +76,11 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 		TFullClient<Block, RuntimeApi, Executor>,
 		TFullBackend<Block>,
 		(),
-		sp_consensus::DefaultImportQueue<Block, TFullClient<Block, RuntimeApi, Executor>>,
+		FrontierBlockImport<
+			Block,
+			Arc<TFullClient<Block, RuntimeApi, Executor>>,
+			TFullClient<Block, RuntimeApi, Executor>,
+		>,
 		sc_transaction_pool::FullPool<Block, TFullClient<Block, RuntimeApi, Executor>>,
 		(Option<Telemetry>, Option<TelemetryWorkerHandle>),
 	>,
@@ -127,6 +144,12 @@ where
 		client.clone(),
 	);
 
+	let pending_transactions: PendingTransactions = Some(Arc::new(Mutex::new(HashMap::new())));
+
+	let filter_pool: Option<FilterPool> = Some(Arc::new(Mutex::new(BTreeMap::new())));
+
+	let frontier_backend = open_frontier_backend(config)?;
+	
 	let import_queue = build_import_queue(
 		client.clone(),
 		config,
@@ -134,10 +157,14 @@ where
 		&task_manager,
 	)?;
 
+	let frontier_block_import =
+		FrontierBlockImport::new(import_queue.clone(), client.clone(), frontier_backend.clone());
+
+
 	let params = PartialComponents {
 		backend,
 		client,
-		import_queue,
+		import_queue: frontier_block_import,
 		keystore_container,
 		task_manager,
 		transaction_pool,
@@ -157,6 +184,7 @@ async fn start_node_impl<RuntimeApi, Executor, RB, BIQ, BIC>(
 	collator_key: CollatorPair,
 	polkadot_config: Configuration,
 	id: ParaId,
+	rpc_config: cli_opt::RpcConfig,
 	rpc_ext_builder: RB,
 	build_import_queue: BIQ,
 	build_consensus: BIC,
@@ -248,8 +276,55 @@ where
 			block_announce_validator_builder: Some(Box::new(|_| block_announce_validator)),
 		})?;
 
-	let rpc_client = client.clone();
-	let rpc_extensions_builder = Box::new(move |_, _| rpc_ext_builder(rpc_client.clone()));
+	let subscription_task_executor = sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
+
+	let spawned_requesters = rpc::spawn_tasks(
+		&rpc_config,
+		rpc::SpawnTasksParams {
+			task_manager: &task_manager,
+			client: client.clone(),
+			substrate_backend: backend.clone(),
+			frontier_backend: frontier_backend.clone(),
+			pending_transactions: pending_transactions.clone(),
+			filter_pool: filter_pool.clone(),
+		},
+	);
+
+	let rpc_extensions_builder = {
+		let client = client.clone();
+		let pool = transaction_pool.clone();
+		let network = network.clone();
+		let pending = pending_transactions.clone();
+		let filter_pool = filter_pool.clone();
+		let frontier_backend = frontier_backend.clone();
+		let backend = backend.clone();
+		let ethapi_cmd = rpc_config.ethapi.clone();
+		let max_past_logs = rpc_config.max_past_logs;
+
+		Box::new(move |deny_unsafe, _| {
+			let deps = rpc::FullDeps {
+				client: client.clone(),
+				pool: pool.clone(),
+				graph: pool.pool().clone(),
+				deny_unsafe,
+				is_authority: collator,
+				network: network.clone(),
+				pending_transactions: pending.clone(),
+				filter_pool: filter_pool.clone(),
+				ethapi_cmd: ethapi_cmd.clone(),
+				command_sink: None,
+				frontier_backend: frontier_backend.clone(),
+				backend: backend.clone(),
+				debug_requester: spawned_requesters.debug.clone(),
+				trace_filter_requester: spawned_requesters.trace.clone(),
+				trace_filter_max_count: rpc_config.ethapi_trace_max_count,
+				max_past_logs,
+				transaction_converter,
+			};
+
+			rpc::create_full(deps, subscription_task_executor.clone())
+		})
+	};
 
 	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		on_demand: None,
@@ -369,6 +444,7 @@ pub async fn start_hedgeware_parachain_node(
 	collator_key: CollatorPair,
 	polkadot_config: Configuration,
 	id: ParaId,
+	rpc_config: cli_opt::RpcConfig,
 ) -> sc_service::error::Result<
 	(TaskManager, Arc<TFullClient<Block, hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor>>)
 > {
@@ -377,6 +453,7 @@ pub async fn start_hedgeware_parachain_node(
 		collator_key,
 		polkadot_config,
 		id,
+		rpc_config,
 		|_| Default::default(),
 		hedgeware_parachain_build_import_queue,
 		|client,

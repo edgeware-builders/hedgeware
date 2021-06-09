@@ -21,7 +21,7 @@ use serde::Deserialize;
 
 pub use rpc_impl_Debug::gen_server::Debug as DebugServer;
 pub mod types {
-	pub use edgeware_rpc_primitives_debug::single;
+	pub use hedgeware_rpc_primitives_debug::single;
 }
 
 use crate::types::single;

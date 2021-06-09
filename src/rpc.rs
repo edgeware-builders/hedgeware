@@ -245,7 +245,7 @@ pub struct SpawnTasksParams<'a, B: BlockT, C, BE> {
 	pub filter_pool: Option<FilterPool>,
 }
 
-/// Spawn the tasks that are required to run Moonbeam.
+/// Spawn the tasks that are required to run Hedgeware.
 pub fn spawn_tasks<B, C, BE>(
 	rpc_config: &RpcConfig,
 	params: SpawnTasksParams<B, C, BE>,

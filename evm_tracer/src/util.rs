@@ -23,7 +23,7 @@ pub use evm_gasometer::tracing::{
 pub use evm_runtime::tracing::{
 	using as runtime_using, Event as RuntimeEvent, EventListener as RuntimeListener,
 };
-use edgeware_rpc_primitives_debug::CallType;
+use hedgeware_rpc_primitives_debug::CallType;
 pub use sp_std::{cell::RefCell, fmt::Debug, rc::Rc, vec, vec::Vec};
 pub struct ListenerProxy<T>(pub Rc<RefCell<T>>);
 

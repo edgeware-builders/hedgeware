@@ -18,7 +18,7 @@ use crate::util::*;
 
 use ethereum_types::{H160, H256};
 use evm::{Capture, ExitReason};
-use edgeware_rpc_primitives_debug::single::{RawStepLog, TransactionTrace};
+use hedgeware_rpc_primitives_debug::single::{RawStepLog, TransactionTrace};
 use sp_std::{collections::btree_map::BTreeMap, vec, vec::Vec};
 
 /// Listen to EVM events to provide the intermediate machine state between opcode executions

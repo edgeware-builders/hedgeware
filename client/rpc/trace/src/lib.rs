@@ -52,7 +52,7 @@ use ethereum_types::H256;
 use fc_rpc::internal_err;
 use fp_rpc::EthereumRuntimeRPCApi;
 
-pub use edgeware_rpc_core_trace::{
+pub use hedgeware_rpc_core_trace::{
 	FilterRequest, RequestBlockId, RequestBlockTag, Trace as TraceT, TraceServer, TransactionTrace,
 };
 use edgeware_rpc_primitives_debug::{block, DebugRuntimeApi};

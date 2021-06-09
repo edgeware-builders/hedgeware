@@ -79,9 +79,9 @@ polkadot-parachain = { git = "https://github.com/paritytech/polkadot", branch = 
 
 # Hedgeware
 hedgeware-rpc-txpool = { path = "./client/rpc/txpool" }
-hedgeware-rpc-primitives-txpool = { path = "./primitives/rpc/txpool" }
+hedgeware-rpc-primitives-txpool = { path = "./rpc-primitives/txpool" }
 hedgeware-rpc-debug = { path = "./client/rpc/debug" }
-hedgeware-rpc-primitives-debug = { path = "./primitives/rpc/debug" }
+hedgeware-rpc-primitives-debug = { path = "./rpc-primitives/debug" }
 hedgeware-rpc-trace = { path = "./client/rpc/trace" }
 
 # Webb

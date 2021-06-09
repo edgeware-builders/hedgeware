@@ -18,7 +18,7 @@ use ethereum::TransactionMessage;
 use ethereum_types::{H160, H256, U256};
 use fc_rpc::{internal_err, public_key};
 use jsonrpc_core::Result as RpcResult;
-pub use edgeware_rpc_core_txpool::{
+pub use hedgeware_rpc_core_txpool::{
 	GetT, Summary, Transaction, TransactionMap, TxPool as TxPoolT, TxPoolResult, TxPoolServer,
 };
 use sc_transaction_graph::{ChainApi, Pool};
@@ -31,7 +31,7 @@ use sp_transaction_pool::InPoolTransaction;
 use std::collections::HashMap;
 use std::{marker::PhantomData, sync::Arc};
 
-use edgeware_rpc_primitives_txpool::{TxPoolResponse, TxPoolRuntimeApi};
+use hedgeware_rpc_primitives_txpool::{TxPoolResponse, TxPoolRuntimeApi};
 
 pub struct TxPool<B: BlockT, C, A: ChainApi> {
 	client: Arc<C>,
