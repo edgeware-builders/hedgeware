@@ -64,6 +64,11 @@ webb-currencies = { default-features = false, git = "https://github.com/webb-too
 webb-tokens = { default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
 webb-traits = { default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.3" }
 
+# Hedgeware
+hedgeware-evm-tracer = { path = "../evm_tracer", default-features = false }
+hedgeware-rpc-primitives-debug = { path = "../rpc-primitives/debug", default-features = false }
+hedgeware-rpc-primitives-txpool = { path = "../rpc-primitives/txpool", default-features = false }
+
 # Cumulus dependencies
 cumulus-pallet-aura-ext = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.3", default-features = false }
 cumulus-pallet-parachain-system = { git = "https://github.com/paritytech/cumulus", branch = "polkadot-v0.9.3", default-features = false }
