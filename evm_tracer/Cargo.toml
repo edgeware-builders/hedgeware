@@ -8,8 +8,8 @@ license = 'GPL-3.0-only'
 repository = 'https://github.com/PureStake/moonbeam/'
 
 [dependencies]
-fp-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.3" }
-pallet-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.3" }
+fp-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.4" }
+pallet-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.4" }
 evm = { version = "0.27.0", default-features = false, features = ["with-codec", "tracing"] }
 evm-runtime = { version = "0.27.0", default-features = false, features = ["tracing"] }
 evm-gasometer = { version = "0.27.0", default-features = false, features = ["tracing"] }
@@ -17,7 +17,7 @@ sp-core = { version = "3.0", default-features = false }
 sp-std = { version = "3.0", default-features = false }
 sp-io = { version = "3.0", default-features = false }
 sp-runtime = { version = "3.0", default-features = false }
-hedgeware-rpc-primitives-debug = { path = "../debug", default-features = false }
+hedgeware-rpc-primitives-debug = { path = "../rpc-primitives/debug", default-features = false }
 ethereum-types = { version = "0.11.0", default-features = false }
 
 [features]

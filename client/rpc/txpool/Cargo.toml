@@ -24,4 +24,4 @@ frame-system = { version = "3.0" }
 serde = { version = "1.0", features = ["derive"] }
 
 hedgeware-rpc-primitives-txpool = { path = "../../../rpc-primitives/txpool" }
-fc-rpc = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.3" }
+fc-rpc = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
