@@ -23,7 +23,7 @@ use cumulus_client_service::{
 	prepare_node_config, start_collator, start_full_node, StartCollatorParams, StartFullNodeParams,
 };
 use cumulus_primitives_core::ParaId;
-use polkadot_primitives::v1::CollatorPair;
+
 use sc_executor::{native_executor_instance, NativeExecutionDispatch};
 use sc_client_api::ExecutorProvider;
 use sc_network::NetworkService;
@@ -32,12 +32,10 @@ use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerH
 use sp_api::ConstructRuntimeApi;
 use sp_consensus::SlotData;
 use sp_keystore::SyncCryptoStorePtr;
-use sp_runtime::traits::BlakeTwo256;
+
 use std::{
 	collections::{BTreeMap, HashMap},
-	str::FromStr,
 	sync::{Arc, Mutex},
-	time::Duration,
 };
 use substrate_prometheus_endpoint::Registry;
 use fc_rpc_core::types::{FilterPool, PendingTransactions};
@@ -54,7 +52,6 @@ type Hash = sp_core::H256;
 
 type FullClient<RuntimeApi, Executor> = TFullClient<Block, RuntimeApi, Executor>;
 type FullBackend = TFullBackend<Block>;
-type MaybeSelectChain = Option<sc_consensus::LongestChain<FullBackend, Block>>;
 
 // Native executor instance.
 native_executor_instance!(
@@ -211,7 +208,7 @@ async fn start_node_impl<RuntimeApi, Executor, RB, BIQ, BIC>(
 	polkadot_config: Configuration,
 	id: ParaId,
 	rpc_config: cli_opt::RpcConfig,
-	rpc_ext_builder: RB,
+	_rpc_ext_builder: RB,
 	build_import_queue: BIQ,
 	build_consensus: BIC,
 ) -> sc_service::error::Result<(TaskManager, Arc<TFullClient<Block, RuntimeApi, Executor>>)>

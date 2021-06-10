@@ -34,7 +34,7 @@ use fc_rpc::{
 use fc_rpc_core::types::{FilterPool, PendingTransactions};
 use futures::StreamExt;
 use jsonrpc_pubsub::manager::SubscriptionManager;
-use hedgeware_parachain_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Header, Index};
+use hedgeware_parachain_primitives::{AccountId, Balance, Block, Hash, Index};
 use hedgeware_rpc_debug::DebugHandler;
 use hedgeware_rpc_debug::{Debug, DebugRequester, DebugServer};
 use hedgeware_rpc_trace::{
