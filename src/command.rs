@@ -19,6 +19,7 @@ use crate::{
 	cli::{Cli, RelayChainCli, Subcommand},
 };
 use codec::Encode;
+use cli_opt::RpcConfig;
 use cumulus_client_service::genesis::generate_genesis_block;
 use cumulus_primitives_core::ParaId;
 use log::info;
@@ -93,7 +94,7 @@ impl SubstrateCli for Cli {
 		load_spec(id, self.run.parachain_id.unwrap_or(2026).into())
 	}
 
-	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
+	fn native_runtime_version(_chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
 		&hedgeware_parachain_runtime::VERSION
 	}
 }
@@ -270,8 +271,13 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(&cli.run.normalize())?;
 
 			runner.run_node_until_exit(|config| async move {
-				// TODO
-				let key = sp_core::Pair::generate().0;
+				let rpc_config = RpcConfig {
+					ethapi: cli.run.ethapi,
+					ethapi_max_permits: cli.run.ethapi_max_permits,
+					ethapi_trace_max_count: cli.run.ethapi_trace_max_count,
+					ethapi_trace_cache_duration: cli.run.ethapi_trace_cache_duration,
+					max_past_logs: cli.run.max_past_logs,
+				};
 
 				let para_id =
 					chain_spec::Extensions::try_get(&*config.chain_spec).map(|e| e.para_id);
@@ -309,7 +315,7 @@ pub fn run() -> Result<()> {
 					}
 				);
 
-				crate::service::start_hedgeware_parachain_node(config, key, polkadot_config, id)
+				crate::service::start_hedgeware_parachain_node(config, polkadot_config, id, rpc_config)
 					.await
 					.map(|r| r.0)
 					.map_err(Into::into)
