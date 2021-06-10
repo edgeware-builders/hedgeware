@@ -23,7 +23,6 @@ use hedgeware_rpc_primitives_debug::DebugRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use tokio::sync::Semaphore;
 
-use crate::{client::RuntimeApiCollection, TransactionConverters};
 use cli_opt::{EthApi as EthApiCmd, RpcConfig};
 use ethereum::EthereumStorageSchema;
 use fc_mapping_sync::MappingSyncWorker;
@@ -35,7 +34,7 @@ use fc_rpc::{
 use fc_rpc_core::types::{FilterPool, PendingTransactions};
 use futures::StreamExt;
 use jsonrpc_pubsub::manager::SubscriptionManager;
-use hedgeware_core_primitives::{Block, Hash};
+use hedgeware_parachain_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Header, Index};
 use hedgeware_rpc_debug::DebugHandler;
 use hedgeware_rpc_debug::{Debug, DebugRequester, DebugServer};
 use hedgeware_rpc_trace::{
@@ -62,7 +61,46 @@ use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
 use sp_transaction_pool::TransactionPool;
 use std::collections::BTreeMap;
 use substrate_frame_rpc_system::{FullSystem, SystemApi};
-use tokio::sync::Semaphore;
+
+/// A set of APIs that polkadot-like runtimes must implement.
+///
+/// This trait has no methods or associated type. It is a concise marker for all
+/// the trait bounds that it contains.
+pub trait RuntimeApiCollection:
+	sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
+	+ sp_api::ApiExt<Block>
+	+ sp_block_builder::BlockBuilder<Block>
+	+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>
+	+ pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance>
+	+ sp_api::Metadata<Block>
+	+ sp_offchain::OffchainWorkerApi<Block>
+	+ sp_session::SessionKeys<Block>
+	+ fp_rpc::EthereumRuntimeRPCApi<Block>
+	+ hedgeware_rpc_primitives_debug::DebugRuntimeApi<Block>
+	+ hedgeware_rpc_primitives_txpool::TxPoolRuntimeApi<Block>
+	+ cumulus_primitives_core::CollectCollationInfo<Block>
+where
+	<Self as sp_api::ApiExt<Block>>::StateBackend: sp_api::StateBackend<BlakeTwo256>,
+{
+}
+
+impl<Api> RuntimeApiCollection for Api
+where
+	Api: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
+		+ sp_api::ApiExt<Block>
+		+ sp_block_builder::BlockBuilder<Block>
+		+ substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>
+		+ pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance>
+		+ sp_api::Metadata<Block>
+		+ sp_offchain::OffchainWorkerApi<Block>
+		+ sp_session::SessionKeys<Block>
+		+ fp_rpc::EthereumRuntimeRPCApi<Block>
+		+ hedgeware_rpc_primitives_debug::DebugRuntimeApi<Block>
+		+ hedgeware_rpc_primitives_txpool::TxPoolRuntimeApi<Block>
+		+ cumulus_primitives_core::CollectCollationInfo<Block>,
+	<Self as sp_api::ApiExt<Block>>::StateBackend: sp_api::StateBackend<BlakeTwo256>,
+{
+}
 
 pub struct RpcRequesters {
 	pub debug: Option<DebugRequester>,
@@ -130,7 +168,6 @@ where
 		pending_transactions,
 		filter_pool,
 		ethapi_cmd,
-		command_sink,
 		frontier_backend,
 		backend: _,
 		debug_requester,

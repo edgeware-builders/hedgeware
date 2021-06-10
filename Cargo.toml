@@ -59,6 +59,7 @@ sp-keystore = { git = "https://github.com/paritytech/substrate", branch = "polka
 sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
 substrate-prometheus-endpoint = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
 
 # RPC related dependencies
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
@@ -92,6 +93,8 @@ hedgeware-rpc-primitives-debug = { path = "./rpc-primitives/debug" }
 hedgeware-rpc-trace = { path = "./client/rpc/trace" }
 
 # Frontier
+ethereum = { package = "pallet-ethereum", git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
+ethereum-primitives = { package = "ethereum", version = "0.7.1", default-features = false, features = ["with-codec"] }
 fc-consensus = { default-features = false, git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
 fp-consensus = { default-features = false, git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
 fc-rpc = { default-features = false, git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4", features = ["rpc_binary_search_estimate"] }

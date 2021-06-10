@@ -24,9 +24,8 @@ use cumulus_client_service::{
 };
 use cumulus_primitives_core::ParaId;
 use polkadot_primitives::v1::CollatorPair;
-
+use sc_executor::{native_executor_instance, NativeExecutionDispatch};
 use sc_client_api::ExecutorProvider;
-use sc_executor::native_executor_instance;
 use sc_network::NetworkService;
 use sc_service::{Configuration, PartialComponents, Role, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
@@ -46,11 +45,16 @@ use fc_consensus::FrontierBlockImport;
 
 pub use sc_executor::NativeExecutor;
 use sc_service::BasePath;
+use crate::rpc::RuntimeApiCollection;
 
 type BlockNumber = u32;
 type Header = sp_runtime::generic::Header<BlockNumber, sp_runtime::traits::BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 type Hash = sp_core::H256;
+
+type FullClient<RuntimeApi, Executor> = TFullClient<Block, RuntimeApi, Executor>;
+type FullBackend = TFullBackend<Block>;
+type MaybeSelectChain = Option<sc_consensus::LongestChain<FullBackend, Block>>;
 
 // Native executor instance.
 native_executor_instance!(
@@ -95,13 +99,14 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 		TFullClient<Block, RuntimeApi, Executor>,
 		TFullBackend<Block>,
 		(),
-		FrontierBlockImport<
-			Block,
-			Arc<TFullClient<Block, RuntimeApi, Executor>>,
-			TFullClient<Block, RuntimeApi, Executor>,
-		>,
+		sp_consensus::DefaultImportQueue<Block, TFullClient<Block, RuntimeApi, Executor>>,
 		sc_transaction_pool::FullPool<Block, TFullClient<Block, RuntimeApi, Executor>>,
 		(
+			FrontierBlockImport<
+				Block,
+				Arc<TFullClient<Block, RuntimeApi, Executor>>,
+				TFullClient<Block, RuntimeApi, Executor>,
+			>,
 			Option<Telemetry>,
 			Option<TelemetryWorkerHandle>,
 			PendingTransactions,
@@ -112,20 +117,11 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 	sc_service::Error,
 >
 where
-	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, Executor>>
-		+ Send
-		+ Sync
-		+ 'static,
-	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
-		+ sp_api::Metadata<Block>
-		+ sp_session::SessionKeys<Block>
-		+ sp_api::ApiExt<
-			Block,
-			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
-		> + sp_offchain::OffchainWorkerApi<Block>
-		+ sp_block_builder::BlockBuilder<Block>,
-	sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
-	Executor: sc_executor::NativeExecutionDispatch + 'static,
+	RuntimeApi:
+		ConstructRuntimeApi<Block, FullClient<RuntimeApi, Executor>> + Send + Sync + 'static,
+	RuntimeApi::RuntimeApi:
+		RuntimeApiCollection<StateBackend = sc_client_api::StateBackendFor<FullBackend, Block>>,
+	Executor: NativeExecutionDispatch + 'static,
 	BIQ: FnOnce(
 		Arc<TFullClient<Block, RuntimeApi, Executor>>,
 		&Configuration,
@@ -161,8 +157,6 @@ where
 		telemetry
 	});
 
-	let select_chain = sc_consensus::LongestChain::new(backend.clone());
-
 	let transaction_pool = sc_transaction_pool::BasicPool::new_full(
 		config.transaction_pool.clone(),
 		config.role.is_authority().into(),
@@ -177,6 +171,9 @@ where
 
 	let frontier_backend = open_frontier_backend(config)?;
 	
+	let frontier_block_import =
+		FrontierBlockImport::new(client.clone(), client.clone(), frontier_backend.clone());
+
 	let import_queue = build_import_queue(
 		client.clone(),
 		config,
@@ -184,18 +181,16 @@ where
 		&task_manager,
 	)?;
 
-	let frontier_block_import =
-		FrontierBlockImport::new(import_queue, client.clone(), frontier_backend.clone());
-
 	let params = PartialComponents {
 		backend,
 		client,
-		import_queue: frontier_block_import,
+		import_queue,
 		keystore_container,
 		task_manager,
 		transaction_pool,
-		select_chain,
+		select_chain: (),
 		other: (
+			frontier_block_import,
 			telemetry,
 			telemetry_worker_handle,
 			pending_transactions,
@@ -221,21 +216,26 @@ async fn start_node_impl<RuntimeApi, Executor, RB, BIQ, BIC>(
 	build_consensus: BIC,
 ) -> sc_service::error::Result<(TaskManager, Arc<TFullClient<Block, RuntimeApi, Executor>>)>
 where
-	RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, Executor>>
-		+ Send
-		+ Sync
-		+ 'static,
-	RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
-		+ sp_api::Metadata<Block>
-		+ sp_session::SessionKeys<Block>
-		+ sp_api::ApiExt<
-			Block,
-			StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
-		> + sp_offchain::OffchainWorkerApi<Block>
-		+ sp_block_builder::BlockBuilder<Block>
-		+ cumulus_primitives_core::CollectCollationInfo<Block>,
-	sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
-	Executor: sc_executor::NativeExecutionDispatch + 'static,
+	// RuntimeApi: ConstructRuntimeApi<Block, TFullClient<Block, RuntimeApi, Executor>>
+	// 	+ Send
+	// 	+ Sync
+	// 	+ 'static,
+	// RuntimeApi::RuntimeApi: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
+	// 	+ sp_api::Metadata<Block>
+	// 	+ sp_session::SessionKeys<Block>
+	// 	+ sp_api::ApiExt<
+	// 		Block,
+	// 		StateBackend = sc_client_api::StateBackendFor<TFullBackend<Block>, Block>,
+	// 	> + sp_offchain::OffchainWorkerApi<Block>
+	// 	+ sp_block_builder::BlockBuilder<Block>
+	// 	+ cumulus_primitives_core::CollectCollationInfo<Block>,
+	// sc_client_api::StateBackendFor<TFullBackend<Block>, Block>: sp_api::StateBackend<BlakeTwo256>,
+	// Executor: sc_executor::NativeExecutionDispatch + 'static,
+	RuntimeApi:
+		ConstructRuntimeApi<Block, FullClient<RuntimeApi, Executor>> + Send + Sync + 'static,
+	RuntimeApi::RuntimeApi:
+		RuntimeApiCollection<StateBackend = sc_client_api::StateBackendFor<FullBackend, Block>>,
+	Executor: NativeExecutionDispatch + 'static,
 	RB: Fn(
 			Arc<TFullClient<Block, RuntimeApi, Executor>>,
 		) -> jsonrpc_core::IoHandler<sc_rpc::Metadata>
@@ -270,6 +270,7 @@ where
 
 	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
 	let (
+		frontier_block_import,
 		mut telemetry,
 		telemetry_worker_handle,
 		pending_transactions,
@@ -314,9 +315,9 @@ where
 
 	let subscription_task_executor = sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
 
-	let spawned_requesters = rpc::spawn_tasks(
+	let spawned_requesters = crate::rpc::spawn_tasks(
 		&rpc_config,
-		rpc::SpawnTasksParams {
+		crate::rpc::SpawnTasksParams {
 			task_manager: &task_manager,
 			client: client.clone(),
 			substrate_backend: backend.clone(),
@@ -338,7 +339,7 @@ where
 		let max_past_logs = rpc_config.max_past_logs;
 
 		Box::new(move |deny_unsafe, _| {
-			let deps = rpc::FullDeps {
+			let deps = crate::rpc::FullDeps {
 				client: client.clone(),
 				pool: pool.clone(),
 				graph: pool.pool().clone(),
@@ -356,7 +357,7 @@ where
 				max_past_logs,
 			};
 
-			rpc::create_full(deps, subscription_task_executor.clone())
+			crate::rpc::create_full(deps, subscription_task_executor.clone())
 		})
 	};
 
