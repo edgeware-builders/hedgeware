@@ -20,22 +20,22 @@ futures = { version = "0.3", features = ["compat"] }
 tracing = "0.1.25"
 
 # Primitives
-sp-runtime = {version = "*" }
-sp-utils = {version = "*" }
-sp-api = {version = "*" }
-sp-io = {version = "*" }
-sp-std = {version = "*" }
-sp-blockchain = {version = "*" }
-sp-transaction-pool = {version = "*" }
-sp-block-builder = {version = "*" }
+sp-runtime = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-utils = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-api = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-io = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-std = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-blockchain = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-transaction-pool = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-block-builder = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
 fp-rpc = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
 hedgeware-rpc-primitives-debug = { path = "../../../rpc-primitives/debug" }
 
 # Client and RPC
 jsonrpc-core = "15.0.0"
-sc-client-api = {version = "*" }
-sc-network = {version = "*" }
-sc-transaction-graph = {version = "*" }
+sc-client-api = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sc-network = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sc-transaction-graph = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
 fc-rpc = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
 fc-consensus = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }
 fc-rpc-core = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }

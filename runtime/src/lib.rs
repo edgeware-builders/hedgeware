@@ -29,7 +29,7 @@ use sp_core::{OpaqueMetadata, U256, H160, H256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{BlakeTwo256, Block as BlockT, IdentityLookup},
-	transaction_validity::{TransactionSource, TransactionValidity},
+	transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult,
 };
 use sp_std::prelude::*;
@@ -63,7 +63,7 @@ use frame_support::PalletId;
 use sp_runtime::Percent;
 use frame_support::traits::U128CurrencyToVote;
 use frame_support::traits::LockIdentifier;
-use frame_support::traits::InstanceFilter;
+use frame_support::traits::{Filter, InstanceFilter};
 use pallet_contracts::weights::WeightInfo;
 use sp_runtime::traits::ConvertInto;
 use static_assertions::const_assert;
@@ -81,6 +81,8 @@ use pallet_evm::{
 	Account as EVMAccount, FeeCalculator, HashedAddressMapping,
 	EnsureAddressTruncated, Runner,
 };
+use pallet_ethereum::Transaction as EthereumTransaction;
+use pallet_ethereum::Call::transact;
 use fp_rpc::TransactionStatus;
 
 // XCM imports
@@ -96,6 +98,8 @@ use xcm_builder::{
 use xcm_executor::{Config, XcmExecutor};
 use pallet_xcm::{XcmPassthrough, EnsureXcm, IsMajorityOfBody};
 use xcm::v0::Xcm;
+
+use hedgeware_rpc_primitives_txpool::TxPoolResponse;
 
 pub type SessionHandlers = ();
 
@@ -165,6 +169,19 @@ pub fn native_version() -> NativeVersion {
 	}
 }
 
+/// Returns if calls are allowed through the filter
+pub struct BaseFilter;
+impl Filter<Call> for BaseFilter {
+	fn filter(c: &Call) -> bool {
+		match c {
+			Call::Balances(_) => false,
+			Call::Ethereum(_) => false,
+			Call::EVM(_) => false,
+			_ => true,
+		}
+	}
+}
+
 /// We assume that ~10% of the block weight is consumed by `on_initalize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -230,8 +247,8 @@ impl frame_system::Config for Runtime {
 	type AccountData = pallet_balances::AccountData<Balance>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
-	type DbWeight = ();
-	type BaseCallFilter = ();
+	type DbWeight = RocksDbWeight;
+	type BaseCallFilter = BaseFilter;
 	type SystemWeightInfo = ();
 	type BlockWeights = RuntimeBlockWeights;
 	type BlockLength = RuntimeBlockLength;
@@ -1016,7 +1033,7 @@ construct_runtime! {
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		ParachainInfo: parachain_info::{Pallet, Storage, Config},
 
-		Democracy: pallet_democracy::{Pallet, Call, Storage, Config, Event<T>},
+		Democracy: pallet_democracy::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Elections: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
@@ -1158,7 +1175,15 @@ impl_runtime_apis! {
 			source: TransactionSource,
 			tx: <Block as BlockT>::Extrinsic,
 		) -> TransactionValidity {
-			Executive::validate_transaction(source, tx)
+			// Filtered calls should not enter the tx pool as they'll fail if inserted.
+			let allowed = <Runtime as frame_system::Config>
+				::BaseCallFilter::filter(&tx.function);
+
+			if allowed {
+				Executive::validate_transaction(source, tx)
+			} else {
+				InvalidTransaction::Call.into()
+			}
 		}
 	}
 
