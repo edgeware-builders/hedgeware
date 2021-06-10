@@ -271,9 +271,6 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(&cli.run.normalize())?;
 
 			runner.run_node_until_exit(|config| async move {
-				// TODO
-				let key = sp_core::Pair::generate().0;
-
 				let rpc_config = RpcConfig {
 					ethapi: cli.run.ethapi,
 					ethapi_max_permits: cli.run.ethapi_max_permits,
@@ -318,7 +315,7 @@ pub fn run() -> Result<()> {
 					}
 				);
 
-				crate::service::start_hedgeware_parachain_node(config, key, polkadot_config, id, rpc_config)
+				crate::service::start_hedgeware_parachain_node(config, polkadot_config, id, rpc_config)
 					.await
 					.map(|r| r.0)
 					.map_err(Into::into)

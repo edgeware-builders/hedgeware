@@ -15,33 +15,6 @@
 // along with Moonbeam.  If not, see <http://www.gnu.org/licenses/>.
 use std::str::FromStr;
 
-/// Block authoring scheme to be used by the dev service.
-#[derive(Debug)]
-pub enum Sealing {
-	/// Author a block immediately upon receiving a transaction into the transaction pool
-	Instant,
-	/// Author a block upon receiving an RPC command
-	Manual,
-	/// Author blocks at a regular interval specified in milliseconds
-	Interval(u64),
-}
-
-impl FromStr for Sealing {
-	type Err = String;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(match s {
-			"instant" => Self::Instant,
-			"manual" => Self::Manual,
-			s => {
-				let millis =
-					u64::from_str_radix(s, 10).map_err(|_| "couldn't decode sealing param")?;
-				Self::Interval(millis)
-			}
-		})
-	}
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub enum EthApi {
 	Txpool,
@@ -57,17 +30,13 @@ impl FromStr for EthApi {
 			"txpool" => Self::Txpool,
 			"debug" => Self::Debug,
 			"trace" => Self::Trace,
-			_ => {
-				return Err(format!(
-					"`{}` is not recognized as a supported Ethereum Api",
-					s
-				))
-			}
+			_ => return Err(format!("`{}` is not recognized as a supported Ethereum Api", s)),
 		})
 	}
 }
 
-pub struct RpcParams {
+pub struct RpcConfig {
+	pub ethapi: Vec<EthApi>,
 	pub ethapi_max_permits: u32,
 	pub ethapi_trace_max_count: u32,
 	pub ethapi_trace_cache_duration: u64,

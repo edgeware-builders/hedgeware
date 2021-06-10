@@ -21,6 +21,7 @@ use std::{sync::Arc, time::Duration};
 use fp_rpc::EthereumRuntimeRPCApi;
 use hedgeware_rpc_primitives_debug::DebugRuntimeApi;
 use sp_block_builder::BlockBuilder;
+use tokio::sync::Semaphore;
 
 use crate::{client::RuntimeApiCollection, TransactionConverters};
 use cli_opt::{EthApi as EthApiCmd, RpcConfig};
@@ -47,7 +48,6 @@ use sc_client_api::{
 	client::BlockchainEvents,
 	BlockOf,
 };
-use sc_consensus_manual_seal::rpc::{EngineCommand, ManualSeal, ManualSealApi};
 use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 use sc_rpc_api::DenyUnsafe;
@@ -93,8 +93,6 @@ pub struct FullDeps<C, P, A: ChainApi, BE> {
 	pub frontier_backend: Arc<fc_db::Backend<Block>>,
 	/// Backend.
 	pub backend: Arc<BE>,
-	/// Manual seal command sink
-	pub command_sink: Option<futures::channel::mpsc::Sender<EngineCommand<Hash>>>,
 	/// Debug server requester.
 	pub debug_requester: Option<DebugRequester>,
 	/// Trace filter cache server requester.
@@ -103,8 +101,6 @@ pub struct FullDeps<C, P, A: ChainApi, BE> {
 	pub trace_filter_max_count: u32,
 	/// Maximum number of logs in a query.
 	pub max_past_logs: u32,
-	/// Ethereum transaction to Extrinsic converter.
-	pub transaction_converter: TransactionConverters,
 }
 /// Instantiate all Full RPC extensions.
 pub fn create_full<C, P, BE, A>(
@@ -141,7 +137,6 @@ where
 		trace_filter_requester,
 		trace_filter_max_count,
 		max_past_logs,
-		transaction_converter,
 	} = deps;
 
 	io.extend_with(SystemApi::to_delegate(FullSystem::new(
@@ -170,7 +165,7 @@ where
 	io.extend_with(EthApiServer::to_delegate(EthApi::new(
 		client.clone(),
 		pool.clone(),
-		transaction_converter,
+		hedgeware_parachain_runtime::TransactionConverter,
 		network.clone(),
 		pending_transactions,
 		signers,
@@ -212,14 +207,6 @@ where
 			graph,
 		)));
 	}
-
-	if let Some(command_sink) = command_sink {
-		io.extend_with(
-			// We provide the rpc handler with the sending end of the channel to allow the rpc
-			// send EngineCommands to the background block authorship task.
-			ManualSealApi::to_delegate(ManualSeal::new(command_sink)),
-		);
-	};
 
 	if let Some(trace_filter_requester) = trace_filter_requester {
 		io.extend_with(TraceServer::to_delegate(Trace::new(

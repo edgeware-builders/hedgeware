@@ -34,10 +34,18 @@ use sp_api::ConstructRuntimeApi;
 use sp_consensus::SlotData;
 use sp_keystore::SyncCryptoStorePtr;
 use sp_runtime::traits::BlakeTwo256;
-use std::sync::Arc;
+use std::{
+	collections::{BTreeMap, HashMap},
+	str::FromStr,
+	sync::{Arc, Mutex},
+	time::Duration,
+};
 use substrate_prometheus_endpoint::Registry;
+use fc_rpc_core::types::{FilterPool, PendingTransactions};
+use fc_consensus::FrontierBlockImport;
 
 pub use sc_executor::NativeExecutor;
+use sc_service::BasePath;
 
 type BlockNumber = u32;
 type Header = sp_runtime::generic::Header<BlockNumber, sp_runtime::traits::BlakeTwo256>;
@@ -50,6 +58,17 @@ native_executor_instance!(
 	hedgeware_parachain_runtime::api::dispatch,
 	hedgeware_parachain_runtime::native_version,
 );
+
+pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
+	let config_dir = config
+		.base_path
+		.as_ref()
+		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
+		.unwrap_or_else(|| {
+			BasePath::from_project("", "", "hedgeware").config_dir(config.chain_spec.id())
+		});
+	config_dir.join("frontier").join("db")
+}
 
 // TODO This is copied from frontier. It should be imported instead after
 // https://github.com/paritytech/frontier/issues/333 is solved
@@ -82,7 +101,13 @@ pub fn new_partial<RuntimeApi, Executor, BIQ>(
 			TFullClient<Block, RuntimeApi, Executor>,
 		>,
 		sc_transaction_pool::FullPool<Block, TFullClient<Block, RuntimeApi, Executor>>,
-		(Option<Telemetry>, Option<TelemetryWorkerHandle>),
+		(
+			Option<Telemetry>,
+			Option<TelemetryWorkerHandle>,
+			PendingTransactions,
+			Option<FilterPool>,
+			Arc<fc_db::Backend<Block>>,
+		),
 	>,
 	sc_service::Error,
 >
@@ -136,6 +161,8 @@ where
 		telemetry
 	});
 
+	let select_chain = sc_consensus::LongestChain::new(backend.clone());
+
 	let transaction_pool = sc_transaction_pool::BasicPool::new_full(
 		config.transaction_pool.clone(),
 		config.role.is_authority().into(),
@@ -158,8 +185,7 @@ where
 	)?;
 
 	let frontier_block_import =
-		FrontierBlockImport::new(import_queue.clone(), client.clone(), frontier_backend.clone());
-
+		FrontierBlockImport::new(import_queue, client.clone(), frontier_backend.clone());
 
 	let params = PartialComponents {
 		backend,
@@ -168,8 +194,14 @@ where
 		keystore_container,
 		task_manager,
 		transaction_pool,
-		select_chain: (),
-		other: (telemetry, telemetry_worker_handle),
+		select_chain,
+		other: (
+			telemetry,
+			telemetry_worker_handle,
+			pending_transactions,
+			filter_pool,
+			frontier_backend,
+		),
 	};
 
 	Ok(params)
@@ -181,7 +213,6 @@ where
 #[sc_tracing::logging::prefix_logs_with("Parachain")]
 async fn start_node_impl<RuntimeApi, Executor, RB, BIQ, BIC>(
 	parachain_config: Configuration,
-	collator_key: CollatorPair,
 	polkadot_config: Configuration,
 	id: ParaId,
 	rpc_config: cli_opt::RpcConfig,
@@ -238,11 +269,16 @@ where
 	let parachain_config = prepare_node_config(parachain_config);
 
 	let params = new_partial::<RuntimeApi, Executor, BIQ>(&parachain_config, build_import_queue)?;
-	let (mut telemetry, telemetry_worker_handle) = params.other;
+	let (
+		mut telemetry,
+		telemetry_worker_handle,
+		pending_transactions,
+		filter_pool,
+		frontier_backend
+	) = params.other;
 
 	let relay_chain_full_node = cumulus_client_service::build_polkadot_full_node(
 		polkadot_config,
-		collator_key.clone(),
 		telemetry_worker_handle,
 	)
 	.map_err(|e| match e {
@@ -265,7 +301,7 @@ where
 	let transaction_pool = params.transaction_pool.clone();
 	let mut task_manager = params.task_manager;
 	let import_queue = cumulus_client_service::SharedImportQueue::new(params.import_queue);
-	let (network, network_status_sinks, system_rpc_tx, start_network) =
+	let (network, system_rpc_tx, start_network) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
 			config: &parachain_config,
 			client: client.clone(),
@@ -307,19 +343,17 @@ where
 				pool: pool.clone(),
 				graph: pool.pool().clone(),
 				deny_unsafe,
-				is_authority: collator,
+				is_authority: true,
 				network: network.clone(),
 				pending_transactions: pending.clone(),
 				filter_pool: filter_pool.clone(),
 				ethapi_cmd: ethapi_cmd.clone(),
-				command_sink: None,
 				frontier_backend: frontier_backend.clone(),
 				backend: backend.clone(),
 				debug_requester: spawned_requesters.debug.clone(),
 				trace_filter_requester: spawned_requesters.trace.clone(),
 				trace_filter_max_count: rpc_config.ethapi_trace_max_count,
 				max_past_logs,
-				transaction_converter,
 			};
 
 			rpc::create_full(deps, subscription_task_executor.clone())
@@ -337,7 +371,6 @@ where
 		keystore: params.keystore_container.sync_keystore(),
 		backend: backend.clone(),
 		network: network.clone(),
-		network_status_sinks,
 		system_rpc_tx,
 		telemetry: telemetry.as_mut(),
 	})?;
@@ -368,7 +401,6 @@ where
 			announce_block,
 			client: client.clone(),
 			task_manager: &mut task_manager,
-			collator_key,
 			relay_chain_full_node,
 			spawner,
 			parachain_consensus,
@@ -441,7 +473,6 @@ pub fn hedgeware_parachain_build_import_queue(
 /// Start a rococo parachain node.
 pub async fn start_hedgeware_parachain_node(
 	parachain_config: Configuration,
-	collator_key: CollatorPair,
 	polkadot_config: Configuration,
 	id: ParaId,
 	rpc_config: cli_opt::RpcConfig,
@@ -450,7 +481,6 @@ pub async fn start_hedgeware_parachain_node(
 > {
 	start_node_impl::<hedgeware_parachain_runtime::RuntimeApi, HedgewareParachainRuntimeExecutor, _, _, _>(
 		parachain_config,
-		collator_key,
 		polkadot_config,
 		id,
 		rpc_config,

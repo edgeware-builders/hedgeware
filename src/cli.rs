@@ -145,7 +145,7 @@ pub struct RunCmd {
 		conflicts_with = "validator",
 		require_delimiter = true
 	)]
-	pub ethapi: Vec<EthApi>,
+	pub ethapi: Vec<cli_opt::EthApi>,
 
 	/// Number of concurrent tracing tasks. Meant to be shared by both "debug" and "trace" modules.
 	#[structopt(long, default_value = "10")]
