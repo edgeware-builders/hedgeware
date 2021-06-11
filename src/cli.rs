@@ -101,7 +101,7 @@ pub struct Cli {
 	pub subcommand: Option<Subcommand>,
 
 	#[structopt(flatten)]
-	pub run: cumulus_client_cli::RunCmd,
+	pub run: RunCmd,
 
 	/// Relaychain arguments
 	#[structopt(raw = true)]
@@ -118,6 +118,61 @@ pub struct RelayChainCli {
 
 	/// The base path that should be used by the relay chain.
 	pub base_path: Option<PathBuf>,
+}
+
+#[derive(Debug, StructOpt)]
+pub struct RunCmd {
+	#[structopt(flatten)]
+	pub base: cumulus_client_cli::RunCmd,
+
+	/// Id of the parachain this collator collates for.
+	#[structopt(long)]
+	pub parachain_id: Option<u32>,
+
+	/// Enable the development service to run without a backing relay chain
+	#[structopt(long)]
+	pub dev_service: bool,
+
+	/// Public authoring identity to be inserted in the author inherent
+	/// This is not currently used, but we may want a way to use it in the dev service.
+	// #[structopt(long)]
+	// pub author_id: Option<NimbusId>,
+
+	/// Enable EVM tracing module on a non-authority node.
+	#[structopt(
+		long,
+		conflicts_with = "collator",
+		conflicts_with = "validator",
+		require_delimiter = true
+	)]
+	pub ethapi: Vec<cli_opt::EthApi>,
+
+	/// Number of concurrent tracing tasks. Meant to be shared by both "debug" and "trace" modules.
+	#[structopt(long, default_value = "10")]
+	pub ethapi_max_permits: u32,
+
+	/// Maximum number of trace entries a single request of `trace_filter` is allowed to return.
+	/// A request asking for more or an unbounded one going over this limit will both return an
+	/// error.
+	#[structopt(long, default_value = "500")]
+	pub ethapi_trace_max_count: u32,
+
+	/// Duration (in seconds) after which the cache of `trace_filter` for a given block will be
+	/// discarded.
+	#[structopt(long, default_value = "300")]
+	pub ethapi_trace_cache_duration: u64,
+
+	/// Maximum number of logs in a query.
+	#[structopt(long, default_value = "10000")]
+	pub max_past_logs: u32,
+}
+
+impl std::ops::Deref for RunCmd {
+	type Target = cumulus_client_cli::RunCmd;
+
+	fn deref(&self) -> &Self::Target {
+		&self.base
+	}
 }
 
 impl RelayChainCli {
