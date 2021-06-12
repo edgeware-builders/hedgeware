@@ -40,7 +40,7 @@ use sp_version::RuntimeVersion;
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types, match_type, RuntimeDebug,
-	traits::{Randomness, IsInVec, All},
+	traits::{Randomness, IsInVec, All, MaxEncodedLen},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		DispatchClass, IdentityFee, Weight,
@@ -530,6 +530,11 @@ parameter_types! {
 // 	Any,
 // 	NonTransfer,
 // 	Governance,
+// }
+// impl MaxEncodedLen for ProxyType {
+// 	fn max_encoded_len() -> usize {
+// 		1 // one byte
+// 	}
 // }
 // impl Default for ProxyType { fn default() -> Self { Self::Any } }
 // impl InstanceFilter<Call> for ProxyType {

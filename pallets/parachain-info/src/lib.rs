@@ -48,7 +48,7 @@ pub mod pallet {
 	impl Default for GenesisConfig {
 		fn default() -> Self {
 			Self {
-				parachain_id: 2026.into()
+				parachain_id: 2000.into()
 			}
 		}
 	}
@@ -61,7 +61,7 @@ pub mod pallet {
 	}
 
 	#[pallet::type_value]
-	pub(super) fn DefaultForParachainId() -> ParaId { 2026.into() }
+	pub(super) fn DefaultForParachainId() -> ParaId { 2000.into() }
 
 	#[pallet::storage]
 	#[pallet::getter(fn parachain_id)]
