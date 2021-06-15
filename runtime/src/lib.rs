@@ -966,6 +966,8 @@ impl merkle::Config for Runtime {
 	type Event = Event;
 	type MaxTreeDepth = MaxTreeDepth;
 	type TreeId = u32;
+	type KeyId = u32;
+	type Randomness = RandomnessCollectiveFlip;
 	type WeightInfo = MerkleWeights<Self>;
 }
 
