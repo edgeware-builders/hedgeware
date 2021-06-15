@@ -956,76 +956,76 @@ impl pallet_aura::Config for Runtime {
 	type AuthorityId = AuraId;
 }
 
-parameter_types! {
-	pub const MaxTreeDepth: u8 = 32;
-	pub const CacheBlockLength: BlockNumber = 100;
-}
+// parameter_types! {
+// 	pub const MaxTreeDepth: u8 = 32;
+// 	pub const CacheBlockLength: BlockNumber = 100;
+// }
 
-impl merkle::Config for Runtime {
-	type CacheBlockLength = CacheBlockLength;
-	type Event = Event;
-	type MaxTreeDepth = MaxTreeDepth;
-	type TreeId = u32;
-	type KeyId = u32;
-	type Randomness = RandomnessCollectiveFlip;
-	type WeightInfo = MerkleWeights<Self>;
-}
+// impl merkle::Config for Runtime {
+// 	type CacheBlockLength = CacheBlockLength;
+// 	type Event = Event;
+// 	type MaxTreeDepth = MaxTreeDepth;
+// 	type TreeId = u32;
+// 	type KeyId = u32;
+// 	type Randomness = RandomnessCollectiveFlip;
+// 	type WeightInfo = MerkleWeights<Self>;
+// }
 
-parameter_types! {
-	pub const TokensPalletId: PalletId = PalletId(*b"py/token");
-	pub const NativeCurrencyId: CurrencyId = 0;
-	pub const CurrencyDeposit: Balance = 100 * DOLLARS;
-}
+// parameter_types! {
+// 	pub const TokensPalletId: PalletId = PalletId(*b"py/token");
+// 	pub const NativeCurrencyId: CurrencyId = 0;
+// 	pub const CurrencyDeposit: Balance = 100 * DOLLARS;
+// }
 
-impl webb_tokens::Config for Runtime {
-	type Amount = Amount;
-	type ApprovalDeposit = ApprovalDeposit;
-	type Balance = Balance;
-	type CurrencyDeposit = CurrencyDeposit;
-	type CurrencyId = CurrencyId;
-	type DustAccount = ();
-	type Event = Event;
-	type Extra = ();
-	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-	type MetadataDepositBase = MetadataDepositBase;
-	type MetadataDepositPerByte = MetadataDepositPerByte;
-	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
-	type PalletId = TokensPalletId;
-	type StringLimit = StringLimit;
-	type WeightInfo = ();
-}
+// impl webb_tokens::Config for Runtime {
+// 	type Amount = Amount;
+// 	type ApprovalDeposit = ApprovalDeposit;
+// 	type Balance = Balance;
+// 	type CurrencyDeposit = CurrencyDeposit;
+// 	type CurrencyId = CurrencyId;
+// 	type DustAccount = ();
+// 	type Event = Event;
+// 	type Extra = ();
+// 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+// 	type MetadataDepositBase = MetadataDepositBase;
+// 	type MetadataDepositPerByte = MetadataDepositPerByte;
+// 	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+// 	type PalletId = TokensPalletId;
+// 	type StringLimit = StringLimit;
+// 	type WeightInfo = ();
+// }
 
-impl webb_currencies::Config for Runtime {
-	type Event = Event;
-	type GetNativeCurrencyId = NativeCurrencyId;
-	type MultiCurrency = Tokens;
-	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
-	type WeightInfo = ();
-}
+// impl webb_currencies::Config for Runtime {
+// 	type Event = Event;
+// 	type GetNativeCurrencyId = NativeCurrencyId;
+// 	type MultiCurrency = Tokens;
+// 	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+// 	type WeightInfo = ();
+// }
 
-parameter_types! {
-	pub const MixerPalletId: PalletId = PalletId(*b"py/mixer");
-	pub const MinimumDepositLength: BlockNumber = 10 * 60 * 24 * 28;
-	pub const DefaultAdminKey: AccountId = AccountId::new([0; 32]);
-	pub MixerSizes: Vec<Balance> = [
-		DOLLARS * 1_000,
-		DOLLARS * 10_000,
-		DOLLARS * 100_000,
-		DOLLARS * 1_000_000
-	].to_vec();
-}
+// parameter_types! {
+// 	pub const MixerPalletId: PalletId = PalletId(*b"py/mixer");
+// 	pub const MinimumDepositLength: BlockNumber = 10 * 60 * 24 * 28;
+// 	pub const DefaultAdminKey: AccountId = AccountId::new([0; 32]);
+// 	pub MixerSizes: Vec<Balance> = [
+// 		DOLLARS * 1_000,
+// 		DOLLARS * 10_000,
+// 		DOLLARS * 100_000,
+// 		DOLLARS * 1_000_000
+// 	].to_vec();
+// }
 
-impl mixer::Config for Runtime {
-	type Currency = Currencies;
-	type DefaultAdmin = DefaultAdminKey;
-	type DepositLength = MinimumDepositLength;
-	type Event = Event;
-	type MixerSizes = MixerSizes;
-	type NativeCurrencyId = NativeCurrencyId;
-	type PalletId = MixerPalletId;
-	type Tree = Merkle;
-	type WeightInfo = MixerWeights<Self>;
-}
+// impl mixer::Config for Runtime {
+// 	type Currency = Currencies;
+// 	type DefaultAdmin = DefaultAdminKey;
+// 	type DepositLength = MinimumDepositLength;
+// 	type Event = Event;
+// 	type MixerSizes = MixerSizes;
+// 	type NativeCurrencyId = NativeCurrencyId;
+// 	type PalletId = MixerPalletId;
+// 	type Tree = Merkle;
+// 	type WeightInfo = MixerWeights<Self>;
+// }
 
 construct_runtime! {
 	pub enum Runtime where
@@ -1066,10 +1066,10 @@ construct_runtime! {
 		Aura: pallet_aura::{Pallet, Config<T>},
 		AuraExt: cumulus_pallet_aura_ext::{Pallet, Config},
 
-		Tokens: webb_tokens::{Pallet, Storage, Event<T>} = 40,
-		Currencies: webb_currencies::{Pallet, Storage, Event<T>} = 41,
-		Mixer: mixer::{Pallet, Call, Storage, Event<T>} = 42,
-		Merkle: merkle::{Pallet, Call, Storage, Event<T>} = 43,
+		// Tokens: webb_tokens::{Pallet, Storage, Event<T>} = 40,
+		// Currencies: webb_currencies::{Pallet, Storage, Event<T>} = 41,
+		// Mixer: mixer::{Pallet, Call, Storage, Event<T>} = 42,
+		// Merkle: merkle::{Pallet, Call, Storage, Event<T>} = 43,
 
 		// XCM helpers.
 		XcmpQueue: cumulus_pallet_xcmp_queue::{Pallet, Call, Storage, Event<T>} = 50,
@@ -1577,16 +1577,16 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl merkle::MerkleApi<Block> for Runtime {
-		fn get_leaf(tree_id: u32, index: u32) -> Option<ScalarData> {
-			let v = Merkle::leaves(tree_id, index);
-			if v == ScalarData::default() {
-				None
-			} else {
-				Some(v)
-			}
-		}
-	}
+	// impl merkle::MerkleApi<Block> for Runtime {
+	// 	fn get_leaf(tree_id: u32, index: u32) -> Option<ScalarData> {
+	// 		let v = Merkle::leaves(tree_id, index);
+	// 		if v == ScalarData::default() {
+	// 			None
+	// 		} else {
+	// 			Some(v)
+	// 		}
+	// 	}
+	// }
 
 	impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
 		fn collect_collation_info() -> cumulus_primitives_core::CollationInfo {
