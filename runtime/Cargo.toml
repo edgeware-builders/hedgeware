@@ -8,6 +8,7 @@ edition = '2018'
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 log = { version = "0.4.14", default-features = false }
+
 # Hedgeware modules
 treasury-reward = { path = "../pallets/treasury-reward", default-features = false }
 parachain-info = { path = "../pallets/parachain-info", default-features = false }
@@ -59,9 +60,6 @@ frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate"
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.4" }
 
 # Webb
-merkle = { package = "pallet-merkle", default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
-mixer = { package = "pallet-mixer", default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
-merkle-rpc = { package = "pallet-merkle-rpc", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4", optional = true }
 webb-currencies = { default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
 webb-tokens = { default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
 webb-traits = { default-features = false, git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
@@ -135,11 +133,11 @@ std = [
 	"pallet-contracts-rpc-runtime-api/std",
 	"pallet-democracy/std",
 	"pallet-elections-phragmen/std",
-	# "pallet-identity/std",
+	"pallet-identity/std",
 	"pallet-multisig/std",
-	# "pallet-proxy/std",
+	"pallet-proxy/std",
 	"pallet-randomness-collective-flip/std",
-	# "pallet-recovery/std",
+	"pallet-recovery/std",
 	"pallet-scheduler/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
@@ -147,7 +145,7 @@ std = [
 	"pallet-transaction-payment/std",
 	"pallet-treasury/std",
 	"pallet-utility/std",
-  # "pallet-vesting/std",
+	"pallet-vesting/std",
 	"hedgeware-parachain-primitives/std",
 	"cumulus-pallet-aura-ext/std",
 	"cumulus-pallet-dmp-queue/std",

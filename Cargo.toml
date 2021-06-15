@@ -105,9 +105,6 @@ fc-mapping-sync = { default-features = false, git = "https://github.com/webb-too
 
 
 # Webb
-merkle = { package = "pallet-merkle", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
-mixer = { package = "pallet-mixer", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
-merkle-rpc = { package = "pallet-merkle-rpc", git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4", optional = true }
 webb-currencies = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
 webb-tokens = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
 webb-traits = { git = "https://github.com/webb-tools/anon", branch = "polkadot-v0.9.4" }
