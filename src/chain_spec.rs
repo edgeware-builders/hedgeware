@@ -85,7 +85,11 @@ pub fn hedgeware(id: ParaId) -> ChainSpec {
 				true,
 			)
 		},
-		Vec::new(),
+		vec![
+      "/ip4/143.198.160.202/tcp/30333/p2p/12D3KooWKnA5vkSiy96GwPVC2fMEiooP9ptqheQiNEYa8YrudHVv"
+      .parse()
+      .unwrap()
+    ],
 		None,
 		None,
 		properties,
