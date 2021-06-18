@@ -172,9 +172,6 @@ pub struct BaseFilter;
 impl Filter<Call> for BaseFilter {
 	fn filter(c: &Call) -> bool {
 		match c {
-			Call::Balances(_) => false,
-			Call::Ethereum(_) => false,
-			Call::EVM(_) => false,
 			_ => true,
 		}
 	}
