@@ -1,7 +1,7 @@
-# hedgeware
+# Hedgeware
 This is a template "Hedgeware" repo with the proposed Hedgeware distribution outlined in [the announcement post](https://commonwealth.im/edgeware/proposal/discussion/1153). To be honest and up-front this proposal has not seen community consensus and so this shouldn't be expected yet to see the light of day. Nonetheless, it has reached the MOST consensus and this repo serves as the work in progress that is the only currently worked-on parachain node for an Edgeware canary network.
 
-We aren't terribly opinionated about launch, rather exploring actual deployment paths to see parachain work grow in the Edgeware community. We welcome any contributors in the Edgeware community to help test and provide tools towards that goal. We do not guarantee any final output for this project. The node is in its current form ready to be deployed by the right community member.
+Myself, Drew, and Nathan aren't terribly opinionated about launch, rather exploring actual deployment paths to see parachain work grow in the Edgeware community. We welcome any contributors in the Edgeware community to help test and provide tools towards that goal. We do not guarantee any final output for this project. The node is in its current form ready to be deployed by the right community member.
 
 With that out of the way...
 
