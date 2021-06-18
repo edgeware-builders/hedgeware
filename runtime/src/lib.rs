@@ -29,7 +29,7 @@ use sp_core::{OpaqueMetadata, U256, H160, H256};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{BlakeTwo256, Block as BlockT, IdentityLookup},
-	transaction_validity::{TransactionSource, TransactionValidity},
+	transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult,
 };
 use sp_std::prelude::*;
@@ -40,7 +40,7 @@ use sp_version::RuntimeVersion;
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types, match_type, RuntimeDebug,
-	traits::{Randomness, IsInVec, All},
+	traits::{Randomness, IsInVec, All, MaxEncodedLen},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		DispatchClass, IdentityFee, Weight,
@@ -63,7 +63,7 @@ use frame_support::PalletId;
 use sp_runtime::Percent;
 use frame_support::traits::U128CurrencyToVote;
 use frame_support::traits::LockIdentifier;
-use frame_support::traits::InstanceFilter;
+use frame_support::traits::{Filter, InstanceFilter};
 use pallet_contracts::weights::WeightInfo;
 use sp_runtime::traits::ConvertInto;
 use static_assertions::const_assert;
@@ -72,8 +72,6 @@ use frame_support::traits::FindAuthor;
 use sp_core::crypto::Public;
 
 // Webb
-use merkle::{utils::keys::ScalarData, weights::Weights as MerkleWeights};
-use mixer::weights::Weights as MixerWeights;
 use webb_currencies::BasicCurrencyAdapter;
 
 // Ethereum imports
@@ -81,6 +79,8 @@ use pallet_evm::{
 	Account as EVMAccount, FeeCalculator, HashedAddressMapping,
 	EnsureAddressTruncated, Runner,
 };
+use pallet_ethereum::Transaction as EthereumTransaction;
+use pallet_ethereum::Call::transact;
 use fp_rpc::TransactionStatus;
 
 // XCM imports
@@ -96,6 +96,8 @@ use xcm_builder::{
 use xcm_executor::{Config, XcmExecutor};
 use pallet_xcm::{XcmPassthrough, EnsureXcm, IsMajorityOfBody};
 use xcm::v0::Xcm;
+
+use hedgeware_rpc_primitives_txpool::TxPoolResponse;
 
 pub type SessionHandlers = ();
 
@@ -165,6 +167,16 @@ pub fn native_version() -> NativeVersion {
 	}
 }
 
+/// Returns if calls are allowed through the filter
+pub struct BaseFilter;
+impl Filter<Call> for BaseFilter {
+	fn filter(c: &Call) -> bool {
+		match c {
+			_ => true,
+		}
+	}
+}
+
 /// We assume that ~10% of the block weight is consumed by `on_initalize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -230,8 +242,8 @@ impl frame_system::Config for Runtime {
 	type AccountData = pallet_balances::AccountData<Balance>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
-	type DbWeight = ();
-	type BaseCallFilter = ();
+	type DbWeight = RocksDbWeight;
+	type BaseCallFilter = BaseFilter;
 	type SystemWeightInfo = ();
 	type BlockWeights = RuntimeBlockWeights;
 	type BlockLength = RuntimeBlockLength;
@@ -437,13 +449,6 @@ impl cumulus_pallet_dmp_queue::Config for Runtime {
 	type ExecuteOverweightOrigin = frame_system::EnsureRoot<AccountId>;
 }
 
-// impl cumulus_ping::Config for Runtime {
-// 	type Event = Event;
-// 	type Origin = Origin;
-// 	type Call = Call;
-// 	type XcmSender = XcmRouter;
-// }
-
 parameter_types! {
 	pub const AssetDeposit: Balance = 1 * DOLLARS;
 	pub const ApprovalDeposit: Balance = 100 * MILLICENTS;
@@ -507,57 +512,62 @@ parameter_types! {
 	pub const MaxPending: u16 = 32;
 }
 
-// /// The type used to represent the kinds of proxying allowed.
-// #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug)]
-// pub enum ProxyType {
-// 	Any,
-// 	NonTransfer,
-// 	Governance,
-// }
-// impl Default for ProxyType { fn default() -> Self { Self::Any } }
-// impl InstanceFilter<Call> for ProxyType {
-// 	fn filter(&self, c: &Call) -> bool {
-// 		match self {
-// 			ProxyType::Any => true,
-// 			ProxyType::NonTransfer => !matches!(
-// 				c,
-// 				Call::Balances(..) |
-// 				Call::Vesting(pallet_vesting::Call::vested_transfer(..))
-// 			),
-// 			ProxyType::Governance => matches!(
-// 				c,
-// 				Call::Democracy(..) |
-// 				Call::Council(..) |
-// 				Call::Elections(..) |
-// 				Call::Treasury(..)
-// 			),
-// 		}
-// 	}
-// 	fn is_superset(&self, o: &Self) -> bool {
-// 		match (self, o) {
-// 			(x, y) if x == y => true,
-// 			(ProxyType::Any, _) => true,
-// 			(_, ProxyType::Any) => false,
-// 			(ProxyType::NonTransfer, _) => true,
-// 			_ => false,
-// 		}
-// 	}
-// }
+/// The type used to represent the kinds of proxying allowed.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug)]
+pub enum ProxyType {
+	Any,
+	NonTransfer,
+	Governance,
+}
+impl MaxEncodedLen for ProxyType {
+	fn max_encoded_len() -> usize {
+		1 // one byte
+	}
+}
+impl Default for ProxyType { fn default() -> Self { Self::Any } }
+impl InstanceFilter<Call> for ProxyType {
+	fn filter(&self, c: &Call) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => !matches!(
+				c,
+				Call::Balances(..) |
+				Call::Vesting(pallet_vesting::Call::vested_transfer(..))
+			),
+			ProxyType::Governance => matches!(
+				c,
+				Call::Democracy(..) |
+				Call::Council(..) |
+				Call::Elections(..) |
+				Call::Treasury(..)
+			),
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			(ProxyType::NonTransfer, _) => true,
+			_ => false,
+		}
+	}
+}
 
-// impl pallet_proxy::Config for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-// 	type Currency = Balances;
-// 	type ProxyType = ProxyType;
-// 	type ProxyDepositBase = ProxyDepositBase;
-// 	type ProxyDepositFactor = ProxyDepositFactor;
-// 	type MaxProxies = MaxProxies;
-// 	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
-// 	type MaxPending = MaxPending;
-// 	type CallHasher = BlakeTwo256;
-// 	type AnnouncementDepositBase = AnnouncementDepositBase;
-// 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
-// }
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = MaxProxies;
+	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+	type MaxPending = MaxPending;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -806,58 +816,58 @@ type EnsureRootOrHalfCouncil = EnsureOneOf<
 	pallet_collective::EnsureProportionMoreThan<_1, _2, AccountId, CouncilCollective>
 >;
 
-// parameter_types! {
-// 	pub const BasicDeposit: Balance = 10 * DOLLARS;       // 258 bytes on-chain
-// 	pub const FieldDeposit: Balance = 250 * CENTS;        // 66 bytes on-chain
-// 	pub const SubAccountDeposit: Balance = 2 * DOLLARS;   // 53 bytes on-chain
-// 	pub const MaxSubAccounts: u32 = 100;
-// 	pub const MaxAdditionalFields: u32 = 100;
-// 	pub const MaxRegistrars: u32 = 20;
-// }
+parameter_types! {
+	pub const BasicDeposit: Balance = 10 * DOLLARS;       // 258 bytes on-chain
+	pub const FieldDeposit: Balance = 250 * CENTS;        // 66 bytes on-chain
+	pub const SubAccountDeposit: Balance = 2 * DOLLARS;   // 53 bytes on-chain
+	pub const MaxSubAccounts: u32 = 100;
+	pub const MaxAdditionalFields: u32 = 100;
+	pub const MaxRegistrars: u32 = 20;
+}
 
-// impl pallet_identity::Config for Runtime {
-// 	type Event = Event;
-// 	type Currency = Balances;
-// 	type BasicDeposit = BasicDeposit;
-// 	type FieldDeposit = FieldDeposit;
-// 	type SubAccountDeposit = SubAccountDeposit;
-// 	type MaxSubAccounts = MaxSubAccounts;
-// 	type MaxAdditionalFields = MaxAdditionalFields;
-// 	type MaxRegistrars = MaxRegistrars;
-// 	type Slashed = Treasury;
-// 	type ForceOrigin = EnsureRootOrHalfCouncil;
-// 	type RegistrarOrigin = EnsureRootOrHalfCouncil;
-// 	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
-// }
+impl pallet_identity::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BasicDeposit = BasicDeposit;
+	type FieldDeposit = FieldDeposit;
+	type SubAccountDeposit = SubAccountDeposit;
+	type MaxSubAccounts = MaxSubAccounts;
+	type MaxAdditionalFields = MaxAdditionalFields;
+	type MaxRegistrars = MaxRegistrars;
+	type Slashed = Treasury;
+	type ForceOrigin = EnsureRootOrHalfCouncil;
+	type RegistrarOrigin = EnsureRootOrHalfCouncil;
+	type WeightInfo = pallet_identity::weights::SubstrateWeight<Runtime>;
+}
 
-// parameter_types! {
-// 	pub const ConfigDepositBase: Balance = 5 * DOLLARS;
-// 	pub const FriendDepositFactor: Balance = 50 * CENTS;
-// 	pub const MaxFriends: u16 = 9;
-// 	pub const RecoveryDeposit: Balance = 5 * DOLLARS;
-// }
+parameter_types! {
+	pub const ConfigDepositBase: Balance = 5 * DOLLARS;
+	pub const FriendDepositFactor: Balance = 50 * CENTS;
+	pub const MaxFriends: u16 = 9;
+	pub const RecoveryDeposit: Balance = 5 * DOLLARS;
+}
 
-// impl pallet_recovery::Config for Runtime {
-// 	type Event = Event;
-// 	type Call = Call;
-// 	type Currency = Balances;
-// 	type ConfigDepositBase = ConfigDepositBase;
-// 	type FriendDepositFactor = FriendDepositFactor;
-// 	type MaxFriends = MaxFriends;
-// 	type RecoveryDeposit = RecoveryDeposit;
-// }
+impl pallet_recovery::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type ConfigDepositBase = ConfigDepositBase;
+	type FriendDepositFactor = FriendDepositFactor;
+	type MaxFriends = MaxFriends;
+	type RecoveryDeposit = RecoveryDeposit;
+}
 
-// parameter_types! {
-// 	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
-// }
+parameter_types! {
+	pub const MinVestedTransfer: Balance = 100 * DOLLARS;
+}
 
-// impl pallet_vesting::Config for Runtime {
-// 	type Event = Event;
-// 	type Currency = Balances;
-// 	type BlockNumberToBalance = ConvertInto;
-// 	type MinVestedTransfer = MinVestedTransfer;
-// 	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
-// }
+impl pallet_vesting::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BlockNumberToBalance = ConvertInto;
+	type MinVestedTransfer = MinVestedTransfer;
+	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+}
 
 parameter_types! {
 	pub const MinimumTreasuryPct: Percent = Percent::from_percent(50);
@@ -935,22 +945,9 @@ impl pallet_aura::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MaxTreeDepth: u8 = 32;
-	pub const CacheBlockLength: BlockNumber = 100;
-}
-
-impl merkle::Config for Runtime {
-	type CacheBlockLength = CacheBlockLength;
-	type Event = Event;
-	type MaxTreeDepth = MaxTreeDepth;
-	type TreeId = u32;
-	type WeightInfo = MerkleWeights<Self>;
-}
-
-parameter_types! {
 	pub const TokensPalletId: PalletId = PalletId(*b"py/token");
 	pub const NativeCurrencyId: CurrencyId = 0;
-	pub const CurrencyDeposit: Balance = 100 * DOLLARS;
+	pub const CurrencyDeposit: Balance = 1 * DOLLARS;
 }
 
 impl webb_tokens::Config for Runtime {
@@ -979,29 +976,6 @@ impl webb_currencies::Config for Runtime {
 	type WeightInfo = ();
 }
 
-parameter_types! {
-	pub const MixerPalletId: PalletId = PalletId(*b"py/mixer");
-	pub const MinimumDepositLength: BlockNumber = 10 * 60 * 24 * 28;
-	pub const DefaultAdminKey: AccountId = AccountId::new([0; 32]);
-	pub MixerSizes: Vec<Balance> = [
-		DOLLARS * 1_000,
-		DOLLARS * 10_000,
-		DOLLARS * 100_000,
-		DOLLARS * 1_000_000
-	].to_vec();
-}
-
-impl mixer::Config for Runtime {
-	type Currency = Currencies;
-	type DefaultAdmin = DefaultAdminKey;
-	type DepositLength = MinimumDepositLength;
-	type Event = Event;
-	type MixerSizes = MixerSizes;
-	type NativeCurrencyId = NativeCurrencyId;
-	type PalletId = MixerPalletId;
-	type Tree = Merkle;
-	type WeightInfo = MixerWeights<Self>;
-}
 
 construct_runtime! {
 	pub enum Runtime where
@@ -1012,22 +986,22 @@ construct_runtime! {
 		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		ParachainSystem: cumulus_pallet_parachain_system::{Pallet, Call, Storage, Inherent, Event<T>, ValidateUnsigned},
+		ParachainSystem: cumulus_pallet_parachain_system::{Pallet, Call, Config, Storage, Inherent, Event<T>, ValidateUnsigned},
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
 		ParachainInfo: parachain_info::{Pallet, Storage, Config},
 
-		Democracy: pallet_democracy::{Pallet, Call, Storage, Config, Event<T>},
+		Democracy: pallet_democracy::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Elections: pallet_elections_phragmen::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>},
 		Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>},
 		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Call, Storage},
-		// Identity: pallet_identity::{Pallet, Call, Storage, Event<T>},
-		// Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>},
-		// Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>},
+		Recovery: pallet_recovery::{Pallet, Call, Storage, Event<T>},
+		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
-		// Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>},
 		Bounties: pallet_bounties::{Pallet, Call, Storage, Event<T>},
 		Tips: pallet_tips::{Pallet, Call, Storage, Event<T>},
@@ -1044,16 +1018,12 @@ construct_runtime! {
 
 		Tokens: webb_tokens::{Pallet, Storage, Event<T>} = 40,
 		Currencies: webb_currencies::{Pallet, Storage, Event<T>} = 41,
-		Mixer: mixer::{Pallet, Call, Storage, Event<T>} = 42,
-		Merkle: merkle::{Pallet, Call, Storage, Event<T>} = 43,
 
 		// XCM helpers.
 		XcmpQueue: cumulus_pallet_xcmp_queue::{Pallet, Call, Storage, Event<T>} = 50,
 		PolkadotXcm: pallet_xcm::{Pallet, Call, Event<T>, Origin} = 51,
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Call, Event<T>, Origin} = 52,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 53,
-
-		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
 	}
 }
 
@@ -1158,7 +1128,15 @@ impl_runtime_apis! {
 			source: TransactionSource,
 			tx: <Block as BlockT>::Extrinsic,
 		) -> TransactionValidity {
-			Executive::validate_transaction(source, tx)
+			// Filtered calls should not enter the tx pool as they'll fail if inserted.
+			let allowed = <Runtime as frame_system::Config>
+				::BaseCallFilter::filter(&tx.function);
+
+			if allowed {
+				Executive::validate_transaction(source, tx)
+			} else {
+				InvalidTransaction::Call.into()
+			}
 		}
 	}
 
@@ -1189,6 +1167,242 @@ impl_runtime_apis! {
 			Aura::authorities()
 		}
 	}
+
+	impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
+		fn account_nonce(account: AccountId) -> Index {
+			System::account_nonce(account)
+		}
+	}
+
+	impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance>
+		for Runtime {
+
+		fn query_info(
+			uxt: <Block as BlockT>::Extrinsic,
+			len: u32,
+		) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+			TransactionPayment::query_info(uxt, len)
+		}
+
+		fn query_fee_details(
+			uxt: <Block as BlockT>::Extrinsic,
+			len: u32,
+		) -> pallet_transaction_payment::FeeDetails<Balance> {
+			TransactionPayment::query_fee_details(uxt, len)
+		}
+	}
+
+	impl hedgeware_rpc_primitives_debug::DebugRuntimeApi<Block> for Runtime {
+		fn trace_transaction(
+			extrinsics: Vec<<Block as BlockT>::Extrinsic>,
+			transaction: &EthereumTransaction,
+			trace_type: hedgeware_rpc_primitives_debug::single::TraceType,
+		) -> Result<
+			hedgeware_rpc_primitives_debug::single::TransactionTrace,
+			sp_runtime::DispatchError
+		> {
+			use hedgeware_rpc_primitives_debug::single::TraceType;
+			use hedgeware_evm_tracer::{RawTracer, CallListTracer};
+
+			// Apply the a subset of extrinsics: all the substrate-specific or ethereum transactions
+			// that preceded the requested transaction.
+			for ext in extrinsics.into_iter() {
+				let _ = match &ext.function {
+					Call::Ethereum(transact(t)) => {
+						if t == transaction {
+							return match trace_type {
+								TraceType::Raw {
+									disable_storage,
+									disable_memory,
+									disable_stack,
+								} => {
+									Ok(RawTracer::new(disable_storage,
+										disable_memory,
+										disable_stack,)
+										.trace(|| Executive::apply_extrinsic(ext))
+										.0
+										.into_tx_trace()
+									)
+								},
+								TraceType::CallList => {
+									Ok(CallListTracer::new()
+										.trace(|| Executive::apply_extrinsic(ext))
+										.0
+										.into_tx_trace()
+									)
+								}
+							}
+
+						} else {
+							Executive::apply_extrinsic(ext)
+						}
+					},
+					_ => Executive::apply_extrinsic(ext)
+				};
+			}
+
+			Err(sp_runtime::DispatchError::Other(
+				"Failed to find Ethereum transaction among the extrinsics."
+			))
+		}
+
+		fn trace_block(
+			extrinsics: Vec<<Block as BlockT>::Extrinsic>,
+		) -> Result<
+			Vec<
+				hedgeware_rpc_primitives_debug::block::TransactionTrace>,
+				sp_runtime::DispatchError
+			> {
+			use hedgeware_rpc_primitives_debug::{single, block, CallResult, CreateResult, CreateType};
+			use hedgeware_evm_tracer::CallListTracer;
+
+			let mut config = <Runtime as pallet_evm::Config>::config().clone();
+			config.estimate = true;
+
+			let mut traces = vec![];
+			let mut eth_tx_index = 0;
+
+			// Apply all extrinsics. Ethereum extrinsics are traced.
+			for ext in extrinsics.into_iter() {
+				match &ext.function {
+					Call::Ethereum(transact(_transaction)) => {
+						let tx_traces = CallListTracer::new()
+							.trace(|| Executive::apply_extrinsic(ext))
+							.0
+							.into_tx_trace();
+
+						let tx_traces = match tx_traces {
+							single::TransactionTrace::CallList(t) => t,
+							_ => return Err(sp_runtime::DispatchError::Other("Runtime API error")),
+						};
+
+						// Convert traces from "single" format to "block" format.
+						let mut tx_traces: Vec<_> = tx_traces.into_iter().map(|trace|
+							match trace.inner {
+								single::CallInner::Call {
+									input, to, res, call_type
+								} => block::TransactionTrace {
+									action: block::TransactionTraceAction::Call {
+										call_type,
+										from: trace.from,
+										gas: trace.gas,
+										input,
+										to,
+										value: trace.value,
+									},
+									// Can't be known here, must be inserted upstream.
+									block_hash: H256::default(),
+									// Can't be known here, must be inserted upstream.
+									block_number: 0,
+									output: match res {
+										CallResult::Output(output) => {
+											block::TransactionTraceOutput::Result(
+												block::TransactionTraceResult::Call {
+													gas_used: trace.gas_used,
+													output
+												})
+										},
+										CallResult::Error(error) =>
+											block::TransactionTraceOutput::Error(error),
+									},
+									subtraces: trace.subtraces,
+									trace_address: trace.trace_address,
+									// Can't be known here, must be inserted upstream.
+									transaction_hash: H256::default(),
+									transaction_position: eth_tx_index,
+								},
+								single::CallInner::Create { init, res } => block::TransactionTrace {
+									action: block::TransactionTraceAction::Create {
+										creation_method: CreateType::Create,
+										from: trace.from,
+										gas: trace.gas,
+										init,
+										value: trace.value,
+									},
+									// Can't be known here, must be inserted upstream.
+									block_hash: H256::default(),
+									// Can't be known here, must be inserted upstream.
+									block_number: 0,
+									output: match res {
+										CreateResult::Success {
+											created_contract_address_hash,
+											created_contract_code
+										} => {
+											block::TransactionTraceOutput::Result(
+												block::TransactionTraceResult::Create {
+													gas_used: trace.gas_used,
+													code: created_contract_code,
+													address: created_contract_address_hash,
+												}
+											)
+										},
+										CreateResult::Error {
+											error
+										} => block::TransactionTraceOutput::Error(error),
+									},
+									subtraces: trace.subtraces,
+									trace_address: trace.trace_address,
+									// Can't be known here, must be inserted upstream.
+									transaction_hash: H256::default(),
+									transaction_position: eth_tx_index,
+
+								},
+								single::CallInner::SelfDestruct {
+									balance,
+									refund_address
+								} => block::TransactionTrace {
+									action: block::TransactionTraceAction::Suicide {
+										address: trace.from,
+										balance,
+										refund_address,
+									},
+									// Can't be known here, must be inserted upstream.
+									block_hash: H256::default(),
+									// Can't be known here, must be inserted upstream.
+									block_number: 0,
+									output: block::TransactionTraceOutput::Result(
+												block::TransactionTraceResult::Suicide
+											),
+									subtraces: trace.subtraces,
+									trace_address: trace.trace_address,
+									// Can't be known here, must be inserted upstream.
+									transaction_hash: H256::default(),
+									transaction_position: eth_tx_index,
+
+								},
+							}
+						).collect();
+
+						traces.append(&mut tx_traces);
+
+						eth_tx_index += 1;
+					},
+					_ => {let _ = Executive::apply_extrinsic(ext); }
+				};
+			}
+
+			Ok(traces)
+		}
+	}
+
+	impl hedgeware_rpc_primitives_txpool::TxPoolRuntimeApi<Block> for Runtime {
+		fn extrinsic_filter(
+			xts_ready: Vec<<Block as BlockT>::Extrinsic>,
+			xts_future: Vec<<Block as BlockT>::Extrinsic>
+		) -> TxPoolResponse {
+			TxPoolResponse {
+				ready: xts_ready.into_iter().filter_map(|xt| match xt.function {
+					Call::Ethereum(transact(t)) => Some(t),
+					_ => None
+				}).collect(),
+				future: xts_future.into_iter().filter_map(|xt| match xt.function {
+					Call::Ethereum(transact(t)) => Some(t),
+					_ => None
+				}).collect(),
+			}
+		}
+	}
+
 
 	impl fp_rpc::EthereumRuntimeRPCApi<Block> for Runtime {
 		fn chain_id() -> u64 {
@@ -1306,17 +1520,6 @@ impl_runtime_apis! {
 				Self::current_receipts(),
 				Self::current_transaction_statuses(),
 			)
-		}
-	}
-
-	impl merkle::MerkleApi<Block> for Runtime {
-		fn get_leaf(tree_id: u32, index: u32) -> Option<ScalarData> {
-			let v = Merkle::leaves(tree_id, index);
-			if v == ScalarData::default() {
-				None
-			} else {
-				Some(v)
-			}
 		}
 	}
 

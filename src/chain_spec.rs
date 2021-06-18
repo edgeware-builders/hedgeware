@@ -109,7 +109,7 @@ pub fn get_chain_spec(id: ParaId) -> ChainSpec {
 		{
 			"ss58Format": 777,
 			"tokenDecimals": 18,
-			"tokenSymbol": "HEDG"
+			"tokenSymbol": "HDG"
 		}"#;
 	let properties = serde_json::from_str(data).unwrap();
 
@@ -167,7 +167,7 @@ fn testnet_genesis(
 		pallet_collective_Instance1: hedgeware_parachain_runtime::CouncilConfig::default(),
 		pallet_treasury: Default::default(),
 		pallet_elections_phragmen: Default::default(),
-		// pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
+		pallet_vesting: hedgeware_parachain_runtime::VestingConfig::default(),
 		treasury_reward: hedgeware_parachain_runtime::TreasuryRewardConfig{
 			current_payout: Default::default(),
 				minting_interval: One::one(),
@@ -179,5 +179,6 @@ fn testnet_genesis(
 		pallet_sudo: hedgeware_parachain_runtime::SudoConfig { key: root_key },
 		parachain_info: hedgeware_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		cumulus_pallet_aura_ext: Default::default(),
+		cumulus_pallet_parachain_system: Default::default(),
 	}
 }

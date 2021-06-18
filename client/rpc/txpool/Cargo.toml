@@ -1,0 +1,27 @@
+[package]
+name = "hedgeware-rpc-txpool"
+version = '0.6.0'
+authors = ['PureStake']
+edition = '2018'
+homepage = 'https://edgewa.re'
+license = 'GPL-3.0-only'
+repository = 'https://github.com/PureStake/moonbeam/'
+
+[dependencies]
+sha3 = "0.8"
+jsonrpc-core = "15.0.0"
+ethereum-types = "0.11.0"
+ethereum = { version = "0.7.1", default-features = false, features = ["with-codec"] }
+hedgeware-rpc-core-txpool = { path = "../../rpc-core/txpool" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+sc-transaction-graph = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4" }
+serde = { version = "1.0", features = ["derive"] }
+
+hedgeware-rpc-primitives-txpool = { path = "../../../rpc-primitives/txpool" }
+fc-rpc = { git = "https://github.com/webb-tools/frontier", branch = "polkadot-v0.9.4" }

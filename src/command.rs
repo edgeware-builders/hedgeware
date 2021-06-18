@@ -19,6 +19,7 @@ use crate::{
 	cli::{Cli, RelayChainCli, Subcommand},
 };
 use codec::Encode;
+use cli_opt::RpcConfig;
 use cumulus_client_service::genesis::generate_genesis_block;
 use cumulus_primitives_core::ParaId;
 use log::info;
@@ -90,10 +91,10 @@ impl SubstrateCli for Cli {
 	}
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
-		load_spec(id, self.run.parachain_id.unwrap_or(2026).into())
+		load_spec(id, self.run.parachain_id.unwrap_or(2000).into())
 	}
 
-	fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
+	fn native_runtime_version(_chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
 		&hedgeware_parachain_runtime::VERSION
 	}
 }
@@ -228,7 +229,7 @@ pub fn run() -> Result<()> {
 
 			let block: crate::service::Block = generate_genesis_block(&load_spec(
 				&params.chain.clone().unwrap_or_default(),
-				params.parachain_id.unwrap_or(2026).into(),
+				params.parachain_id.unwrap_or(2000).into(),
 			)?)?;
 			let raw_header = block.header().encode();
 			let output_buf = if params.raw {
@@ -270,8 +271,13 @@ pub fn run() -> Result<()> {
 			let runner = cli.create_runner(&cli.run.normalize())?;
 
 			runner.run_node_until_exit(|config| async move {
-				// TODO
-				let key = sp_core::Pair::generate().0;
+				let rpc_config = RpcConfig {
+					ethapi: cli.run.ethapi,
+					ethapi_max_permits: cli.run.ethapi_max_permits,
+					ethapi_trace_max_count: cli.run.ethapi_trace_max_count,
+					ethapi_trace_cache_duration: cli.run.ethapi_trace_cache_duration,
+					max_past_logs: cli.run.max_past_logs,
+				};
 
 				let para_id =
 					chain_spec::Extensions::try_get(&*config.chain_spec).map(|e| e.para_id);
@@ -283,7 +289,7 @@ pub fn run() -> Result<()> {
 						.chain(cli.relaychain_args.iter()),
 				);
 
-				let id = ParaId::from(cli.run.parachain_id.or(para_id).unwrap_or(2026));
+				let id = ParaId::from(cli.run.parachain_id.or(para_id).unwrap_or(2000));
 
 				let parachain_account =
 					AccountIdConversion::<polkadot_primitives::v0::AccountId>::into_account(&id);
@@ -309,7 +315,7 @@ pub fn run() -> Result<()> {
 					}
 				);
 
-				crate::service::start_hedgeware_parachain_node(config, key, polkadot_config, id)
+				crate::service::start_hedgeware_parachain_node(config, polkadot_config, id, rpc_config)
 					.await
 					.map(|r| r.0)
 					.map_err(Into::into)
