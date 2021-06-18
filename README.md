@@ -65,21 +65,46 @@ git fetch
 git checkout release-v0.9.4
 cargo build --release
 
-# Generate a raw chain spec
-./target/release/polkadot build-spec --chain rococo-local --disable-default-bootnode --raw > rococo-local-cfde.json
+# generate the relay chain spec
+./target/release/polkadot build-spec --chain rococo-local --disable-default-bootnode > roc-local.json
 
-# Alice
-./target/release/polkadot --chain rococo-local-cfde.json --alice --tmp
+# run the relay chain with only `--node-key <key>` param and note the peer ID.
+# modify the roc-local.json file, bootnodes param with the appropriate IP and peer ID:
+# "/ip4/127.0.0.1/tcp/50555/p2p/<peer ID>"
 
-# Bob (In a separate terminal)
-./target/release/polkadot --chain rococo-local-cfde.json --bob --tmp --port 30334
+# generate the raw relay chain spec
+./target/release/polkadot build-spec --chain=./roc-local.json --disable-default-bootnode --raw > roc-local-raw.json
+
+# generate the collator chainspec
+./target/release/hedgeware-collator build-spec --chain hedgeware-config --disable-default-bootnode > hedgeware-local.json
+
+# run the parachain with only `--node-key <key>` param and note the peer ID.
+# "/ip4/127.0.0.1/tcp/30333/p2p/<peer ID>"
+# modify the hedgeware-local.json file, bootnodes param with the appropriate IP and peer ID:
+./target/release/hedgeware-collator build-spec --chain=./hedgeware-local.json --disable-default-bootnode --raw > hedgeware-local.chainspec.json
+
+# generate the collator genesis configs
+./target/release/hedgeware-collator export-genesis-state --chain=./hedgeware-local.chainspec.json --parachain-id 2000 > genesis-state-2000
+./target/release/hedgeware-collator export-genesis-wasm --chain=./hedgeware-local.chainspec.json > genesis-code-2000
+
 ```
 
-# Usage against Rococo spec [work in progress]
+# Usage against Rococo spec
 ```
 cargo build --release
 
-./target/release/hedgeware-collator --collator --chain=hedgeware-rococo --pruning=archive
+# Before generating the spec, reserve the paraID on rococo and modify para ID params to the appropriate para ID.
+
+# generate the spec
+./target/release/hedgeware-collator build-spec --chain=hedgeware-config --disable-default-bootnode > hedgeware-rococo.json
+./target/release/hedgeware-collator build-spec --chain=./res/hedgeware-rococo.json --disable-default-bootnode --raw > ./res/hedgeware-rococo.chainspec.json
+
+# generate the genesis
+./target/release/hedgeware-collator export-genesis-state --chain=./res/hedgeware-rococo.chainspec.json --parachain-id <paraID> > rococo-state
+./target/release/hedgeware-collator export-genesis-wasm --chain=./res/hedgeware-rococo.chainspec.json > rococo-code
+
+# Run the collator
+./target/release/hedgeware-collator --collator -d /tmp/parachain --node-key <key> --force-authoring --ws-port 9944 --rpc-cors all --parachain-id <rococo-paraID> --port=30333 --chain=./res/hedgeware-rococo.chainspec.json --alice -- --execution wasm --chain rococo -d ~/perm/rococo --port=30334 --ws-port 9945
 ```
 
 # Register the parachain in the local setup
