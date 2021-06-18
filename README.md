@@ -1,3 +1,5 @@
+<img width="966" alt="Screen Shot 2021-06-17 at 23 18 11" src="https://user-images.githubusercontent.com/13153687/122501407-a1cb6a80-cfc2-11eb-906a-5894572e64be.png">
+
 # Hedgeware
 This is a template "Hedgeware" repo with the proposed Hedgeware distribution outlined in [the announcement post](https://commonwealth.im/edgeware/proposal/discussion/1153). To be honest and up-front this proposal has not seen community consensus and so this shouldn't be expected yet to see the light of day. Nonetheless, it has reached the MOST consensus and this repo serves as the work in progress that is the only currently worked-on parachain node for an Edgeware canary network.
 
