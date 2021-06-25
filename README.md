@@ -1,11 +1,8 @@
-<img width="966" alt="Screen Shot 2021-06-17 at 23 18 11" src="https://user-images.githubusercontent.com/13153687/122501407-a1cb6a80-cfc2-11eb-906a-5894572e64be.png">
+![image](https://user-images.githubusercontent.com/38070512/123351255-b495f000-d52a-11eb-8170-fe077b013f01.png)
 
-# Hedgeware
-This is a template "Hedgeware" repo with the proposed Hedgeware distribution outlined in [the announcement post](https://commonwealth.im/edgeware/proposal/discussion/1153). To be honest and up-front this proposal has not seen community consensus and so this shouldn't be expected yet to see the light of day. Nonetheless, it has reached the MOST consensus and this repo serves as the work in progress that is the only currently worked-on parachain node for an Edgeware canary network.
+# Kabocha, smart contract parachain on KSM, from Edgeware.
+This is a template repo originally developed by Drew Stone, along with Webb members (Thank you!!)  It is currently being modified by the Edgeware community, along with it's genesis distribution, to suit the use case. 
 
-Myself, Drew, and Nathan aren't terribly opinionated about launch, rather exploring actual deployment paths to see parachain work grow in the Edgeware community. We welcome any contributors in the Edgeware community to help test and provide tools towards that goal. We do not guarantee any final output for this project. The node is in its current form ready to be deployed by the right community member.
-
-With that out of the way...
 
 # Contributing
 The parachain repos are coordinated around branches such as `polkadot-v0.9.X` on the Substrate & Cumulus and `release-v0.9.X` on the Polkadot repos respectively. It is good practice that we follow that here, while using `main` to represent the best, currently working version of the node against the most up-to-date upstream versions. Currently, we have our latest work on `polkadot-v0.9.4` and related branches.
