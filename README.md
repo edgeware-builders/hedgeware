@@ -1,4 +1,5 @@
 ![image](https://user-images.githubusercontent.com/38070512/123351255-b495f000-d52a-11eb-8170-fe077b013f01.png)
+Photo by [David Zwirner](https://www.davidzwirner.com/viewing-room/2020/lixia)
 
 # Kabocha, smart contract parachain on KSM, from Edgeware.
 This is a template repo originally developed by Drew Stone, along with Webb members (Thank you!!)  It is currently being modified by the Edgeware community, along with it's genesis distribution, to suit the use case. 
