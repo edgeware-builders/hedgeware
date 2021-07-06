@@ -9,8 +9,8 @@ This is a template repo originally developed by Drew Stone, along with Webb memb
 The parachain repos are coordinated around branches such as `polkadot-v0.9.X` on the Substrate & Cumulus and `release-v0.9.X` on the Polkadot repos respectively. It is good practice that we follow that here, while using `main` to represent the best, currently working version of the node against the most up-to-date upstream versions. Currently, we have our latest work on `polkadot-v0.9.7` and related branches.
 
 ## Updating versions
-In order to update to something like `polkadot-v0.9.5` and `releaes-v0.9.5` the process is quite simple barring any upstream changes.
-1. Convert all references to `v0.9.7` to `v0.9.5`.
+In order to update to something like `polkadot-v0.9.8` and `releaes-v0.9.8` the process is quite simple barring any upstream changes.
+1. Convert all references to `v0.9.7` to `v0.9.8`.
 2. Run cargo update.
 3. Build the node and fix any errors.
 4. Use the `cumlulus/polkadot-parachains` repo as a starting point to address discrepencies / errors.
