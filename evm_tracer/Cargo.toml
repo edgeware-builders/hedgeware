@@ -8,15 +8,15 @@ license = 'GPL-3.0-only'
 repository = 'https://github.com/PureStake/moonbeam/'
 
 [dependencies]
-fp-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.4" }
-pallet-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.4" }
+fp-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.7" }
+pallet-evm = { git = "https://github.com/webb-tools/frontier", default-features = false, branch = "polkadot-v0.9.7" }
 evm = { version = "0.27.0", default-features = false, features = ["with-codec", "tracing"] }
 evm-runtime = { version = "0.27.0", default-features = false, features = ["tracing"] }
 evm-gasometer = { version = "0.27.0", default-features = false, features = ["tracing"] }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4", default-features = false }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.4", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.7", default-features = false }
 hedgeware-rpc-primitives-debug = { path = "../rpc-primitives/debug", default-features = false }
 ethereum-types = { version = "0.11.0", default-features = false }
 
